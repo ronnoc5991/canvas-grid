@@ -15,9 +15,6 @@ import { isEdgeVisible } from "../utils/drawEdges";
 import { isVertexVisible } from "../utils/drawVertices";
 import drawCircle from "../utils/drawCircle";
 
-// could always compare agains the canvas dimensions?
-// if the canvas is 200 x 100, and the zoom factor is 2, we want to show the section of the grid between 50 - 150 x 25 - 75
-
 // viewport tells us which pixels of the underlying grid we are representing
 // we can compare the positions of things against the viewport to see if we should draw them
 // then we have to translate the viewport into the canvas dimensions and draw things there
@@ -173,6 +170,7 @@ export default class Display {
     );
   }
 
+  // translate canvas coordinates into real coordinates
   private getRealXFromCanvasX(xValue: number): number {
     return (
       this.viewport.minX +
@@ -187,56 +185,21 @@ export default class Display {
     );
   }
 
-  private onMouseDown({ clientX, clientY }: MouseEvent) {
-    if (this.settings.getEditMode() == "exploration") {
-      this.isDragging = true;
-      this.previousMousePosition.x = clientX;
-      this.previousMousePosition.y = clientY;
-    } else if (this.settings.getEditMode() == "vertex-creation") {
-      const { x, y } = this.canvas.getBoundingClientRect();
-      // TODO: should we just pass in coordinates for a new vertex to graph?
-      // TODO: are these coordinates accurate if we are zoomed?
+  private onMouseDown(event: MouseEvent) {
+    const editMode = this.settings.getEditMode();
 
-      const newVertex = new Vertex({
-        x: this.getRealXFromCanvasX(clientX - x),
-        y: this.getRealYFromCanvasY(clientY - y),
-      });
-
-      this.graph.addVertex(newVertex);
-    } else if (this.settings.getEditMode() === "edge-creation") {
-      const { x, y } = this.canvas.getBoundingClientRect();
-      const clickedVertex = getClickedVertex(
-        {
-          x: this.getRealXFromCanvasX(clientX - x),
-          y: this.getRealYFromCanvasY(clientY - y),
-        },
-        this.graph.vertices,
-        CIRCLE_CONFIG.radius
-      );
-
-      if (clickedVertex === undefined) return;
-
-      if (this.fromVertex === null) {
-        this.fromVertex = clickedVertex;
-      } else {
-        const euclideanDistance = Math.sqrt(
-          Math.pow(this.fromVertex.position.x - clickedVertex.position.x, 2) +
-            Math.pow(this.fromVertex.position.y - clickedVertex.position.y, 2)
-        );
-        // TODO: should we just tell the graph to make the new edge?
-        // fromVertex, toVertex ...edgeVariant?
-        const newEdge = new Edge(euclideanDistance, [
-          this.fromVertex,
-          clickedVertex,
-        ]);
-        this.graph.addEdge(newEdge);
-
-        this.fromVertex.addEdge(newEdge);
-        if (this.settings.getEdgeVariant() === "bidirectional")
-          clickedVertex.addEdge(newEdge);
-
-        this.fromVertex = null;
-      }
+    switch (editMode) {
+      case "exploration":
+        this.startDrag(event);
+        break;
+      case "vertex-creation":
+        this.createVertex(event);
+        break;
+      case "edge-creation":
+        this.createEdge(event);
+        break;
+      default:
+      // do nothing
     }
   }
 
@@ -261,5 +224,54 @@ export default class Display {
     this.viewport.maxX -= deltaX;
     this.viewport.minY -= deltaY;
     this.viewport.maxY -= deltaY;
+  }
+
+  private startDrag({ clientX, clientY }: MouseEvent) {
+    this.isDragging = true;
+    this.previousMousePosition.x = clientX;
+    this.previousMousePosition.y = clientY;
+  }
+
+  private createVertex({ clientX, clientY }: MouseEvent) {
+    const { x, y } = this.canvas.getBoundingClientRect();
+    const newVertex = new Vertex({
+      x: this.getRealXFromCanvasX(clientX - x),
+      y: this.getRealYFromCanvasY(clientY - y),
+    });
+    this.graph.addVertex(newVertex);
+  }
+
+  private createEdge({ clientX, clientY }: MouseEvent) {
+    const { x, y } = this.canvas.getBoundingClientRect();
+    const clickedVertex = getClickedVertex(
+      {
+        x: this.getRealXFromCanvasX(clientX - x),
+        y: this.getRealYFromCanvasY(clientY - y),
+      },
+      this.graph.vertices,
+      CIRCLE_CONFIG.radius
+    );
+
+    if (clickedVertex === undefined) return;
+
+    if (this.fromVertex === null) {
+      this.fromVertex = clickedVertex;
+    } else {
+      const euclideanDistance = Math.sqrt(
+        Math.pow(this.fromVertex.position.x - clickedVertex.position.x, 2) +
+          Math.pow(this.fromVertex.position.y - clickedVertex.position.y, 2)
+      );
+      const newEdge = new Edge(euclideanDistance, [
+        this.fromVertex,
+        clickedVertex,
+      ]);
+      this.graph.addEdge(newEdge);
+
+      this.fromVertex.addEdge(newEdge);
+      if (this.settings.getEdgeVariant() === "bidirectional")
+        clickedVertex.addEdge(newEdge);
+
+      this.fromVertex = null;
+    }
   }
 }
