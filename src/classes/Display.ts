@@ -49,6 +49,9 @@ export default class Display {
       minY: 0,
       maxY: canvas.height,
     };
+    this.settings.subscribeToZoom((zoomPercentage) =>
+      this.updateViewport(zoomPercentage)
+    );
     canvas.addEventListener("mousedown", (event) => this.onMouseDown(event));
     canvas.addEventListener("mouseup", () => this.onMouseUp());
     canvas.addEventListener("mousemove", (event) => this.onMouseMove(event));
@@ -66,6 +69,22 @@ export default class Display {
     this.drawGrid();
     this.drawEdges();
     this.drawVertices();
+  }
+
+  private updateViewport(zoomPercentage: number) {
+    const previousWidth = this.viewport.maxX - this.viewport.minX;
+    const previousHeight = this.viewport.maxY - this.viewport.minY;
+
+    const newWidth = Math.round(this.canvas.width * (100 / zoomPercentage));
+    const newHeight = Math.round(this.canvas.height * (100 / zoomPercentage));
+
+    const halfDeltaX = Math.round((newWidth - previousWidth) / 2);
+    const halfDeltaY = Math.round((newHeight - previousHeight) / 2);
+
+    this.viewport.minX -= halfDeltaX;
+    this.viewport.maxX += halfDeltaX;
+    this.viewport.minY -= halfDeltaY;
+    this.viewport.maxY += halfDeltaY;
   }
 
   private drawGrid() {

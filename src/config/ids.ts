@@ -5,3 +5,5 @@ export const containerId: string = "canvas-container";
 export const canvasId: string = "canvas";
 export const unidirectionalRadioButtonId: string = "unidirectional";
 export const bidirectionalRadioButtonId: string = "bidirectional";
+export const zoomOutButtonId: string = "zoom-out";
+export const zoomInButtonId: string = "zoom-in";
