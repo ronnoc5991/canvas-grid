@@ -11,7 +11,7 @@ body {
   flex-direction: column;
 }
 
-.control-panel {
+.settings {
   display: flex;
   gap: 20px;
 }

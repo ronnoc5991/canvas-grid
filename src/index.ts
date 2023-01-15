@@ -8,7 +8,6 @@ import "./style.css";
 
 const container = document.getElementById(containerId);
 const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
-const display = new Display(canvas);
 
 function onResize() {
   // const previousCanvasWidth = canvas.width;
@@ -34,4 +33,5 @@ window.addEventListener("resize", onResize);
 
 updateCanvasClassName();
 onResize();
+const display = new Display(canvas);
 updateDisplay();

@@ -1,5 +1,4 @@
 import type { Position } from "../types/Position";
-import type { Offset } from "../types/Offset";
 import Graph from "./Graph";
 import useGraph from "../hooks/useGraph";
 import drawLine from "../utils/drawLine";
@@ -16,32 +15,53 @@ import { isEdgeVisible } from "../utils/drawEdges";
 import { isVertexVisible } from "../utils/drawVertices";
 import drawCircle from "../utils/drawCircle";
 
-// move to a viewport only model?
-// the offset is contained in the viewport... right?
-// we can calculate the viewport on each frame, draw everything
+// could always compare agains the canvas dimensions?
+// if the canvas is 200 x 100, and the zoom factor is 2, we want to show the section of the grid between 50 - 150 x 25 - 75
+
+// viewport tells us which pixels of the underlying grid we are representing
+// we can compare the positions of things against the viewport to see if we should draw them
+// then we have to translate the viewport into the canvas dimensions and draw things there
+
+// calculate the previous center position
+// calculate the new viewport dimensions
+// position the viewport so as to maintain the center position
+// translate the item positions from underlying grid to canvas dimensions:
+// itemX / viewportWiddth = itemCanvasWidth / canvasWidth
 
 export default class Display {
   private canvas: HTMLCanvasElement;
   private context: CanvasRenderingContext2D;
   private previousMousePosition: Position;
-  private offset: Offset;
   private graph: Graph;
   private settings: Settings;
   private fromVertex: Vertex | null;
   private isDragging: boolean;
+  private viewport: Viewport;
 
   public constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.context = canvas.getContext("2d") as CanvasRenderingContext2D;
     this.previousMousePosition = { x: 0, y: 0 };
-    this.offset = { x: 0, y: 0 };
     this.graph = useGraph();
     this.settings = useSettings();
     this.fromVertex = null;
     this.isDragging = false;
+    this.viewport = {
+      minX: 0,
+      maxX: canvas.width,
+      minY: 0,
+      maxY: canvas.height,
+    };
     canvas.addEventListener("mousedown", (event) => this.onMouseDown(event));
     canvas.addEventListener("mouseup", () => this.onMouseUp());
     canvas.addEventListener("mousemove", (event) => this.onMouseMove(event));
+    window.addEventListener("resize", () => {
+      // TODO: these are garbage
+      this.viewport.minX = 0;
+      this.viewport.maxX = canvas.width;
+      this.viewport.minY = 0;
+      this.viewport.maxY = canvas.height;
+    });
   }
 
   public update() {
@@ -57,36 +77,38 @@ export default class Display {
     let xStartingValue;
     let yStartingValue;
 
-    const minX = 0 - this.offset.x;
-    const maxX = minX + this.canvas.width;
-
-    for (let i = minX; i <= maxX; i++) {
+    for (let i = this.viewport.minX; i <= this.viewport.maxX; i++) {
       if (i % DEFAULT_BLOCK_SIZE === 0) {
         xStartingValue = i;
         break;
       }
     }
 
-    for (let i = xStartingValue ?? 0; i <= maxX; i += DEFAULT_BLOCK_SIZE) {
+    for (
+      let i = xStartingValue ?? 0;
+      i <= this.viewport.maxX;
+      i += DEFAULT_BLOCK_SIZE
+    ) {
       xValues.push(i);
     }
 
-    const minY = 0 - this.offset.y;
-    const maxY = minY + this.canvas.height;
-
-    for (let i = minY; i <= maxY; i++) {
+    for (let i = this.viewport.minY; i <= this.viewport.maxY; i++) {
       if (Math.floor(i) % DEFAULT_BLOCK_SIZE === 0) {
         yStartingValue = i;
         break;
       }
     }
 
-    for (let i = yStartingValue ?? 0; i <= maxY; i += DEFAULT_BLOCK_SIZE) {
+    for (
+      let i = yStartingValue ?? 0;
+      i <= this.viewport.maxY;
+      i += DEFAULT_BLOCK_SIZE
+    ) {
       yValues.push(i);
     }
 
     xValues.forEach((value) => {
-      const xValue = this.getCanvasX(value);
+      const xValue = this.getCanvasXFromRealX(value);
       drawLine(
         { x: xValue, y: 0 },
         { x: xValue, y: this.canvas.height },
@@ -95,7 +117,7 @@ export default class Display {
     });
 
     yValues.forEach((value) => {
-      const yValue = this.getCanvasY(value);
+      const yValue = this.getCanvasYFromRealY(value);
       drawLine(
         { x: 0, y: yValue },
         { x: this.canvas.width, y: yValue },
@@ -105,63 +127,64 @@ export default class Display {
   }
 
   private drawEdges() {
-    const minX = 0 - this.offset.x;
-    const maxX = minX + this.canvas.width;
-    const minY = 0 - this.offset.y;
-    const maxY = minY + this.canvas.height;
-    const viewport: Viewport = { minX, maxX, minY, maxY };
     this.graph.edges.forEach((edge) => {
-      if (!isEdgeVisible(edge, viewport)) return;
+      if (!isEdgeVisible(edge, this.viewport)) return;
       const fromPosition: Position = {
-        x: edge.vertices[0].position.x + this.offset.x,
-        y: edge.vertices[0].position.y + this.offset.y,
+        x: this.getCanvasXFromRealX(edge.vertices[0].position.x),
+        y: this.getCanvasYFromRealY(edge.vertices[0].position.y),
       };
       const toPosition: Position = {
-        x: edge.vertices[1].position.x + this.offset.x,
-        y: edge.vertices[1].position.y + this.offset.y,
+        x: this.getCanvasXFromRealX(edge.vertices[1].position.x),
+        y: this.getCanvasYFromRealY(edge.vertices[1].position.y),
       };
       drawLine(fromPosition, toPosition, this.context, EDGE_CONFIG);
     });
   }
 
   private drawVertices() {
-    const minX = 0 - this.offset.x;
-    const maxX = minX + this.canvas.width;
-    const minY = 0 - this.offset.y;
-    const maxY = minY + this.canvas.height;
     this.graph.vertices.forEach(({ position }) => {
-      if (
-        !isVertexVisible(position, CIRCLE_CONFIG.radius, {
-          minX,
-          maxX,
-          minY,
-          maxY,
-        })
-      )
+      if (!isVertexVisible(position, CIRCLE_CONFIG.radius, this.viewport))
         return;
       drawCircle(
-        { x: position.x + this.offset.x, y: position.y + this.offset.y },
+        {
+          x: this.getCanvasXFromRealX(position.x),
+          y: this.getCanvasYFromRealY(position.y),
+        },
         CIRCLE_CONFIG,
         this.context
       );
     });
   }
 
-  private getCanvasX(xValue: number): number {
-    return xValue + this.offset.x;
-    // return (
-    //   this.canvas.width * (xValue / (this.viewport.maxX - this.viewport.minX)) -
-    //   this.viewport.minX
-    // );
+  // translate "real" coordinates into canvas coordinates
+  private getCanvasXFromRealX(xValue: number): number {
+    return (
+      this.canvas.width *
+      ((xValue - this.viewport.minX) /
+        (this.viewport.maxX - this.viewport.minX))
+    );
   }
 
-  private getCanvasY(yValue: number): number {
-    return yValue + this.offset.y;
-    // return (
-    //   this.canvas.height *
-    //     (yValue / (this.viewport.maxY - this.viewport.minY)) -
-    //   this.viewport.minY
-    // );
+  private getCanvasYFromRealY(yValue: number): number {
+    return (
+      this.canvas.height *
+      ((yValue - this.viewport.minY) /
+        (this.viewport.maxY - this.viewport.minY))
+    );
+  }
+
+  private getRealXFromCanvasX(xValue: number): number {
+    return (
+      this.viewport.minX +
+      (this.viewport.maxX - this.viewport.minX) * (xValue / this.canvas.width)
+    );
+  }
+
+  private getRealYFromCanvasY(yValue: number): number {
+    return (
+      this.viewport.minY +
+      (this.viewport.maxY - this.viewport.minY) * (yValue / this.canvas.height)
+    );
   }
 
   private onMouseDown({ clientX, clientY }: MouseEvent) {
@@ -172,15 +195,21 @@ export default class Display {
     } else if (this.settings.getEditMode() == "vertex-creation") {
       const { x, y } = this.canvas.getBoundingClientRect();
       // TODO: should we just pass in coordinates for a new vertex to graph?
+      // TODO: are these coordinates accurate if we are zoomed?
+
       const newVertex = new Vertex({
-        x: clientX - x - this.offset.x,
-        y: clientY - y - this.offset.y,
+        x: this.getRealXFromCanvasX(clientX - x),
+        y: this.getRealYFromCanvasY(clientY - y),
       });
+
       this.graph.addVertex(newVertex);
     } else if (this.settings.getEditMode() === "edge-creation") {
       const { x, y } = this.canvas.getBoundingClientRect();
       const clickedVertex = getClickedVertex(
-        { x: clientX - x - this.offset.x, y: clientY - y - this.offset.y },
+        {
+          x: this.getRealXFromCanvasX(clientX - x),
+          y: this.getRealYFromCanvasY(clientY - y),
+        },
         this.graph.vertices,
         CIRCLE_CONFIG.radius
       );
@@ -228,7 +257,9 @@ export default class Display {
     this.previousMousePosition.x = currentMousePosition.x;
     this.previousMousePosition.y = currentMousePosition.y;
 
-    this.offset.x += deltaX;
-    this.offset.y += deltaY;
+    this.viewport.minX -= deltaX;
+    this.viewport.maxX -= deltaX;
+    this.viewport.minY -= deltaY;
+    this.viewport.maxY -= deltaY;
   }
 }
