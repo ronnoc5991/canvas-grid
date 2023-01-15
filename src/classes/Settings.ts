@@ -1,38 +1,31 @@
 import {
-  DEFAULT_ZOOM_PERCENTAGE,
-  MAX_ZOOM_PERCENTAGE,
-  MIN_ZOOM_PERCENTAGE,
-} from "../config/constants";
-import {
   bidirectionalRadioButtonId,
   edgeCreationButtonId,
   explorationButtonId,
   unidirectionalRadioButtonId,
   vertexCreationButtonId,
-  zoomOutButtonId,
-  zoomInButtonId,
+  // zoomOutButtonId,
+  // zoomInButtonId,
 } from "../config/ids";
 import { EdgeVariant } from "../types/EdgeVariant";
 import { EditMode } from "../types/EditMode";
 
+// TODO: allow for changing the circle config (radius)
+
 export default class Settings {
   private editMode: EditMode;
   private edgeVariant: EdgeVariant;
-  private zoomPercentage: number;
-  private zoomCallbacks: Array<(zoomPercentage: number) => void>;
   private explorationButton: HTMLButtonElement;
   private vertexCreationButton: HTMLButtonElement;
   private edgeCreationButton: HTMLButtonElement;
   private unidirectionalRadioButton: HTMLElement;
   private bidirectionalRadioButton: HTMLElement;
-  private zoomOutButton: HTMLButtonElement;
-  private zoomInButton: HTMLButtonElement;
+  // private zoomOutButton: HTMLButtonElement;
+  // private zoomInButton: HTMLButtonElement;
 
   constructor() {
     this.editMode = "vertex-creation";
     this.edgeVariant = "bidirectional";
-    this.zoomPercentage = DEFAULT_ZOOM_PERCENTAGE;
-    this.zoomCallbacks = [];
     this.explorationButton = document.getElementById(
       explorationButtonId
     ) as HTMLButtonElement;
@@ -48,12 +41,12 @@ export default class Settings {
     this.bidirectionalRadioButton = document.getElementById(
       bidirectionalRadioButtonId
     ) as HTMLElement;
-    this.zoomOutButton = document.getElementById(
-      zoomOutButtonId
-    ) as HTMLButtonElement;
-    this.zoomInButton = document.getElementById(
-      zoomInButtonId
-    ) as HTMLButtonElement;
+    // this.zoomOutButton = document.getElementById(
+    //   zoomOutButtonId
+    // ) as HTMLButtonElement;
+    // this.zoomInButton = document.getElementById(
+    //   zoomInButtonId
+    // ) as HTMLButtonElement;
     this.explorationButton.addEventListener("click", () =>
       this.onExplorationClick()
     );
@@ -69,12 +62,6 @@ export default class Settings {
     this.unidirectionalRadioButton.addEventListener("click", () =>
       this.onUnidirectionalRadioButtonClick()
     );
-    this.zoomOutButton.addEventListener("click", () => {
-      this.zoomOut();
-    });
-    this.zoomInButton.addEventListener("click", () => {
-      this.zoomIn();
-    });
   }
 
   public getEditMode() {
@@ -103,27 +90,5 @@ export default class Settings {
 
   private onUnidirectionalRadioButtonClick() {
     this.edgeVariant = "unidirectional";
-  }
-
-  private zoomIn() {
-    if (this.zoomPercentage >= MAX_ZOOM_PERCENTAGE) return;
-    this.zoomPercentage += 2;
-    this.updateZoomSubscribers();
-  }
-
-  private zoomOut() {
-    if (this.zoomPercentage <= MIN_ZOOM_PERCENTAGE) return;
-    this.zoomPercentage -= 2;
-    this.updateZoomSubscribers();
-  }
-
-  public subscribeToZoom(callback: (zoomPercentage: number) => void) {
-    this.zoomCallbacks.push(callback);
-  }
-
-  private updateZoomSubscribers() {
-    this.zoomCallbacks.forEach((callback) => {
-      callback(this.zoomPercentage);
-    });
   }
 }

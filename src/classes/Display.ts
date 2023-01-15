@@ -2,7 +2,12 @@ import type { Position } from "../types/Position";
 import Graph from "./Graph";
 import useGraph from "../hooks/useGraph";
 import drawLine from "../utils/drawLine";
-import { DEFAULT_BLOCK_SIZE } from "../config/constants";
+import {
+  DEFAULT_BLOCK_SIZE,
+  DEFAULT_ZOOM_PERCENTAGE,
+  MAX_ZOOM_PERCENTAGE,
+  MIN_ZOOM_PERCENTAGE,
+} from "../config/constants";
 import Settings from "./Settings";
 import useSettings from "../hooks/useSettings";
 import Vertex from "./Vertex";
@@ -27,42 +32,47 @@ import drawCircle from "../utils/drawCircle";
 // make that vertex 'active'
 // when a vertex is 'active', we can delete it?
 
+// it also needs to listen/get alerted to clicks on the zoom buttons
+// settings need to be able to update the zoomPercentage as well...
+
 export default class Display {
   private canvas: HTMLCanvasElement;
   private context: CanvasRenderingContext2D;
-  private previousMousePosition: Position;
   private graph: Graph;
   private settings: Settings;
+  private viewport: Viewport;
+  private zoomPercentage: number;
   private fromVertex: Vertex | null;
   private isDragging: boolean;
-  private viewport: Viewport;
+  private previousMousePosition: Position;
 
   public constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.context = canvas.getContext("2d") as CanvasRenderingContext2D;
-    this.previousMousePosition = { x: 0, y: 0 };
     this.graph = useGraph();
     this.settings = useSettings();
-    this.fromVertex = null;
-    this.isDragging = false;
     this.viewport = {
       minX: 0,
       maxX: canvas.width,
       minY: 0,
       maxY: canvas.height,
     };
-    this.settings.subscribeToZoom((zoomPercentage) =>
-      this.updateViewport(zoomPercentage)
-    );
+    this.zoomPercentage = DEFAULT_ZOOM_PERCENTAGE;
+    this.fromVertex = null;
+    this.isDragging = false;
+    this.previousMousePosition = { x: 0, y: 0 };
     canvas.addEventListener("mousedown", (event) => this.onMouseDown(event));
     canvas.addEventListener("mouseup", () => this.onMouseUp());
     canvas.addEventListener("mousemove", (event) => this.onMouseMove(event));
     window.addEventListener("resize", () => {
-      // TODO: Determine what to do on resize... these values are garbage
-      this.viewport.minX = 0;
-      this.viewport.maxX = canvas.width;
-      this.viewport.minY = 0;
-      this.viewport.maxY = canvas.height;
+      this.updateViewport(
+        this.zoomPercentage,
+        this.canvas.width,
+        this.canvas.height
+      );
+    });
+    canvas.addEventListener("wheel", (event) => {
+      this.onScroll(event);
     });
   }
 
@@ -73,20 +83,47 @@ export default class Display {
     this.drawVertices();
   }
 
-  private updateViewport(zoomPercentage: number) {
+  // TODO: more descriptive/better name for this?
+  private updateViewport(
+    zoomPercentage: number,
+    mouseX: number,
+    mouseY: number
+  ) {
+    const horizontalMouseFactor = mouseX / window.innerWidth;
+    const verticalMouseFactor = mouseY / window.innerHeight;
+
     const previousWidth = this.viewport.maxX - this.viewport.minX;
     const previousHeight = this.viewport.maxY - this.viewport.minY;
 
     const newWidth = Math.round(this.canvas.width * (100 / zoomPercentage));
     const newHeight = Math.round(this.canvas.height * (100 / zoomPercentage));
 
-    const halfDeltaX = Math.round((newWidth - previousWidth) / 2);
-    const halfDeltaY = Math.round((newHeight - previousHeight) / 2);
+    const deltaX = newWidth - previousWidth;
+    const deltaY = newHeight - previousHeight;
 
-    this.viewport.minX -= halfDeltaX;
-    this.viewport.maxX += halfDeltaX;
-    this.viewport.minY -= halfDeltaY;
-    this.viewport.maxY += halfDeltaY;
+    const minXDelta = deltaX * horizontalMouseFactor;
+    const maxXDelta = deltaX - minXDelta;
+    const minYDelta = deltaY * verticalMouseFactor;
+    const maxYDelta = deltaY - minYDelta;
+
+    this.viewport.minX -= minXDelta;
+    this.viewport.maxX += maxXDelta;
+    this.viewport.minY -= minYDelta;
+    this.viewport.maxY += maxYDelta;
+  }
+
+  private onScroll({ deltaY, clientX, clientY }: WheelEvent) {
+    if (
+      (deltaY > 0 && this.zoomPercentage <= MIN_ZOOM_PERCENTAGE) ||
+      (deltaY < 0 && this.zoomPercentage >= MAX_ZOOM_PERCENTAGE)
+    )
+      return;
+    if (deltaY > 0 && this.zoomPercentage > MIN_ZOOM_PERCENTAGE) {
+      this.zoomPercentage -= 1;
+    } else if (deltaY < 0 && this.zoomPercentage < MAX_ZOOM_PERCENTAGE) {
+      this.zoomPercentage += 1;
+    }
+    this.updateViewport(this.zoomPercentage, clientX, clientY);
   }
 
   private drawGrid() {
@@ -95,7 +132,7 @@ export default class Display {
     let xStartingValue;
     let yStartingValue;
 
-    for (let i = this.viewport.minX; i <= this.viewport.maxX; i++) {
+    for (let i = Math.round(this.viewport.minX); i <= this.viewport.maxX; i++) {
       if (i % DEFAULT_BLOCK_SIZE === 0) {
         xStartingValue = i;
         break;
@@ -110,7 +147,7 @@ export default class Display {
       xValues.push(i);
     }
 
-    for (let i = this.viewport.minY; i <= this.viewport.maxY; i++) {
+    for (let i = Math.round(this.viewport.minY); i <= this.viewport.maxY; i++) {
       if (i % DEFAULT_BLOCK_SIZE === 0) {
         yStartingValue = i;
         break;
