@@ -15,9 +15,9 @@ import { isEdgeVisible } from "../utils/drawEdges";
 import { isVertexVisible } from "../utils/drawVertices";
 import drawCircle from "../utils/drawCircle";
 
-// viewport tells us which pixels of the underlying grid we are representing
-// we can compare the positions of things against the viewport to see if we should draw them
-// then we have to translate the viewport into the canvas dimensions and draw things there
+// There is one coordinate system
+// We represent that coordinate system at different scales
+// In order to do this, we have to translate between "canvas" coordinates (used for drawing on the canvas) and the "real" coordinates (used for positions)
 
 // calculate the previous center position
 // calculate the new viewport dimensions
@@ -90,7 +90,7 @@ export default class Display {
     }
 
     for (let i = this.viewport.minY; i <= this.viewport.maxY; i++) {
-      if (Math.floor(i) % DEFAULT_BLOCK_SIZE === 0) {
+      if (i % DEFAULT_BLOCK_SIZE === 0) {
         yStartingValue = i;
         break;
       }
@@ -204,7 +204,7 @@ export default class Display {
   }
 
   private onMouseUp() {
-    this.isDragging = false;
+    this.stopDrag();
   }
 
   private onMouseMove(event: MouseEvent) {
@@ -230,6 +230,10 @@ export default class Display {
     this.isDragging = true;
     this.previousMousePosition.x = clientX;
     this.previousMousePosition.y = clientY;
+  }
+
+  private stopDrag() {
+    this.isDragging = false;
   }
 
   private createVertex({ clientX, clientY }: MouseEvent) {
