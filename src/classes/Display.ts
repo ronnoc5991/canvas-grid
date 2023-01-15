@@ -6,7 +6,6 @@ import { DEFAULT_BLOCK_SIZE } from "../config/constants";
 import Settings from "./Settings";
 import useSettings from "../hooks/useSettings";
 import Vertex from "./Vertex";
-import getClickedVertex from "../utils/getClickedVertex";
 import { CIRCLE_CONFIG } from "../config/circle";
 import Edge from "./Edge";
 import { Viewport } from "../types/Viewport";
@@ -15,15 +14,18 @@ import { isEdgeVisible } from "../utils/drawEdges";
 import { isVertexVisible } from "../utils/drawVertices";
 import drawCircle from "../utils/drawCircle";
 
+// TODO: Create ability to 'select' an edge and delete it
+// TODO: Create ability to 'select' a vertex and delete it
+// TODO: Allow user to set vertex size/edge thickness/color/etc
+// TODO: Make the edges bezier curves, allow user to edit them
+
 // There is one coordinate system
 // We represent that coordinate system at different scales
 // In order to do this, we have to translate between "canvas" coordinates (used for drawing on the canvas) and the "real" coordinates (used for positions)
 
-// calculate the previous center position
-// calculate the new viewport dimensions
-// position the viewport so as to maintain the center position
-// translate the item positions from underlying grid to canvas dimensions:
-// itemX / viewportWiddth = itemCanvasWidth / canvasWidth
+// we will have to 'select' a vertex (check which one was clicked)
+// make that vertex 'active'
+// when a vertex is 'active', we can delete it?
 
 export default class Display {
   private canvas: HTMLCanvasElement;
@@ -56,7 +58,7 @@ export default class Display {
     canvas.addEventListener("mouseup", () => this.onMouseUp());
     canvas.addEventListener("mousemove", (event) => this.onMouseMove(event));
     window.addEventListener("resize", () => {
-      // TODO: these are garbage
+      // TODO: Determine what to do on resize... these values are garbage
       this.viewport.minX = 0;
       this.viewport.maxX = canvas.width;
       this.viewport.minY = 0;
@@ -239,6 +241,8 @@ export default class Display {
     this.previousMousePosition.x = currentMousePosition.x;
     this.previousMousePosition.y = currentMousePosition.y;
 
+    // TODO: This method results in slower/faster dragging depending on the current zoom level
+    // need to translate these canvas relative values into the underlying coordinate system values?
     this.viewport.minX -= deltaX;
     this.viewport.maxX -= deltaX;
     this.viewport.minY -= deltaY;
@@ -266,14 +270,10 @@ export default class Display {
 
   private createEdge({ clientX, clientY }: MouseEvent) {
     const { x, y } = this.canvas.getBoundingClientRect();
-    const clickedVertex = getClickedVertex(
-      {
-        x: this.getRealXFromCanvasX(clientX - x),
-        y: this.getRealYFromCanvasY(clientY - y),
-      },
-      this.graph.vertices,
-      CIRCLE_CONFIG.radius
-    );
+    const clickedVertex = this.getClickedVertex({
+      x: this.getRealXFromCanvasX(clientX - x),
+      y: this.getRealYFromCanvasY(clientY - y),
+    });
 
     if (clickedVertex === undefined) return;
 
@@ -296,5 +296,20 @@ export default class Display {
 
       this.fromVertex = null;
     }
+  }
+
+  private getClickedVertex(clickedPosition: Position): Vertex | undefined {
+    return this.graph.vertices.find(({ position }) => {
+      const leftEdge = position.x - CIRCLE_CONFIG.radius;
+      const rightEdge = position.x + CIRCLE_CONFIG.radius;
+      const topEdge = position.y - CIRCLE_CONFIG.radius;
+      const bottomEdge = position.y + CIRCLE_CONFIG.radius;
+      return (
+        clickedPosition.x >= leftEdge &&
+        clickedPosition.x <= rightEdge &&
+        clickedPosition.y >= topEdge &&
+        clickedPosition.y <= bottomEdge
+      );
+    });
   }
 }
