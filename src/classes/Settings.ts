@@ -24,7 +24,7 @@ export default class Settings {
   // private zoomInButton: HTMLButtonElement;
 
   constructor() {
-    this.editMode = "vertex-creation";
+    this.editMode = "exploration";
     this.edgeVariant = "bidirectional";
     this.explorationButton = document.getElementById(
       explorationButtonId
