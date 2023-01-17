@@ -17,20 +17,10 @@ import { Viewport } from "../types/Viewport";
 import { EDGE_CONFIG } from "../config/line";
 import drawCircle from "../utils/drawCircle";
 
-// TODO: Create ability to 'select' an edge and delete it
-// TODO: Create ability to 'select' a vertex and delete it
-// TODO: Allow user to set vertex size/edge thickness/color/etc
-// TODO: Make the edges bezier curves, allow user to edit them
-
-// There is one coordinate system
-// We represent that coordinate system at different scales
-// In order to do this, we have to translate between "canvas" coordinates (used for drawing on the canvas) and the "real" coordinates (used for positions)
-
 // we will have to 'select' a vertex (check which one was clicked)
 // make that vertex 'active'
 // when a vertex is 'active', we can delete it?
 
-// TODO: allow zoom buttons to zoom in/out by a given amount
 // settings need to be able to update the zoomPercentage as well...
 
 export default class Display {

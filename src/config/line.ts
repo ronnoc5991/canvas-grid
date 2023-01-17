@@ -3,8 +3,6 @@ export type LineConfig = {
   width: number;
 };
 
-// TODO: These should actually be editable by the user...
-
 export const EDGE_CONFIG: LineConfig = {
   color: "#000000",
   width: 2,

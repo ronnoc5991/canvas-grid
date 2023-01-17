@@ -1,9 +1,6 @@
 import type { Position } from "../types/Position";
 import Edge from "./Edge";
 
-// TODO: store path finding specific things here?
-// TODO: Support custom vertex colors/appearances?
-
 export default class Vertex {
   public edges: Array<Edge>;
 
