@@ -1,27 +1,39 @@
+import { EdgeVariant } from "../types/EdgeVariant";
+import { EditMode } from "../types/EditMode";
 import {
   bidirectionalRadioButtonId,
+  canvasId,
   edgeCreationButtonId,
   explorationButtonId,
   unidirectionalRadioButtonId,
   vertexCreationButtonId,
-  //   zoomOutButtonId,
-  //   zoomInButtonId,
+  zoomOutButtonId,
+  zoomInButtonId,
 } from "../config/ids";
-import useSettings from "../hooks/useSettings";
-import Settings from "./Settings";
+
+type EditModeHanlder = (newEditMode: EditMode) => void;
+type EdgeVariantHandler = (newEdgeVariant: EdgeVariant) => void;
+type ScrollHandler = (event: WheelEvent) => void;
+type ZoomHandler = () => void;
 
 export default class Controls {
-  private settings: Settings;
+  private canvas: HTMLCanvasElement;
   private explorationButton: HTMLButtonElement;
   private vertexCreationButton: HTMLButtonElement;
   private edgeCreationButton: HTMLButtonElement;
   private unidirectionalRadioButton: HTMLElement;
   private bidirectionalRadioButton: HTMLElement;
-  //   private zoomOutButton: HTMLButtonElement;
-  //   private zoomInButton: HTMLButtonElement;
+  private zoomInButton: HTMLButtonElement;
+  private zoomOutButton: HTMLButtonElement;
 
-  constructor() {
-    this.settings = useSettings();
+  constructor(
+    private onChangeEditMode: EditModeHanlder,
+    private onChangeEdgeVariant: EdgeVariantHandler,
+    private onScroll: ScrollHandler,
+    private onZoomIn: ZoomHandler,
+    private onZoomOut: ZoomHandler
+  ) {
+    this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     this.explorationButton = document.getElementById(
       explorationButtonId
     ) as HTMLButtonElement;
@@ -37,46 +49,36 @@ export default class Controls {
     this.bidirectionalRadioButton = document.getElementById(
       bidirectionalRadioButtonId
     ) as HTMLElement;
-    // this.zoomOutButton = document.getElementById(
-    //   zoomOutButtonId
-    // ) as HTMLButtonElement;
-    // this.zoomInButton = document.getElementById(
-    //   zoomInButtonId
-    // ) as HTMLButtonElement;
-    this.explorationButton.addEventListener("click", () =>
-      this.onExplorationClick()
-    );
-    this.vertexCreationButton?.addEventListener("click", () =>
-      this.onVertexCreationClick()
-    );
-    this.edgeCreationButton?.addEventListener("click", () =>
-      this.onEdgeCreationClick()
-    );
-    this.bidirectionalRadioButton.addEventListener("click", () =>
-      this.onBidirectionalRadioButtonClick()
-    );
-    this.unidirectionalRadioButton.addEventListener("click", () =>
-      this.onUnidirectionalRadioButtonClick()
-    );
-  }
+    this.zoomOutButton = document.getElementById(
+      zoomOutButtonId
+    ) as HTMLButtonElement;
+    this.zoomInButton = document.getElementById(
+      zoomInButtonId
+    ) as HTMLButtonElement;
 
-  private onExplorationClick() {
-    this.settings.setEditMode("exploration");
-  }
-
-  private onVertexCreationClick() {
-    this.settings.setEditMode("vertex-creation");
-  }
-
-  private onEdgeCreationClick() {
-    this.settings.setEditMode("edge-creation");
-  }
-
-  private onBidirectionalRadioButtonClick() {
-    this.settings.setEdgeVariant("bidirectional");
-  }
-
-  private onUnidirectionalRadioButtonClick() {
-    this.settings.setEdgeVariant("unidirectional");
+    this.canvas.addEventListener("wheel", (event) => {
+      this.onScroll(event);
+    });
+    this.explorationButton.addEventListener("click", () => {
+      this.onChangeEditMode("exploration");
+    });
+    this.vertexCreationButton?.addEventListener("click", () => {
+      this.onChangeEditMode("vertex-creation");
+    });
+    this.edgeCreationButton?.addEventListener("click", () => {
+      this.onChangeEditMode("edge-creation");
+    });
+    this.bidirectionalRadioButton.addEventListener("click", () => {
+      this.onChangeEdgeVariant("bidirectional");
+    });
+    this.unidirectionalRadioButton.addEventListener("click", () => {
+      this.onChangeEdgeVariant("unidirectional");
+    });
+    this.zoomInButton.addEventListener("click", () => {
+      this.onZoomIn();
+    });
+    this.zoomOutButton.addEventListener("click", () => {
+      this.onZoomOut();
+    });
   }
 }

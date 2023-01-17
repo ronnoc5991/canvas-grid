@@ -1,6 +1,5 @@
 import { containerId, canvasId } from "./config/ids";
 import Display from "./classes/Display";
-import Controls from "./classes/Controls";
 import "./style.css";
 
 const container = document.getElementById(containerId);
@@ -19,6 +18,5 @@ function updateDisplay() {
 window.addEventListener("resize", onResize);
 
 onResize();
-new Controls();
 const display = new Display(canvas);
 updateDisplay();

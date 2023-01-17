@@ -5,8 +5,6 @@ import drawLine from "../utils/drawLine";
 import {
   DEFAULT_BLOCK_SIZE,
   DEFAULT_ZOOM_PERCENTAGE,
-  MAX_ZOOM_PERCENTAGE,
-  MIN_ZOOM_PERCENTAGE,
 } from "../config/constants";
 import Settings from "./Settings";
 import useSettings from "../hooks/useSettings";
@@ -17,18 +15,12 @@ import { Viewport } from "../types/Viewport";
 import { EDGE_CONFIG } from "../config/line";
 import drawCircle from "../utils/drawCircle";
 
-// settings need to be able to update the zoomPercentage as well...
-
 export default class Display {
   private canvas: HTMLCanvasElement;
   private context: CanvasRenderingContext2D;
   private graph: Graph;
   private settings: Settings;
   private viewport: Viewport;
-  private zoomPercentage: number; // should this actually live in the settings?
-  // what are the settings?
-  // the settings should be any variable that the user is able to change
-  // the settings do impact what we display...
   private fromVertex: Vertex | null;
   private isDragging: boolean;
   private previousMousePosition: Position;
@@ -38,13 +30,13 @@ export default class Display {
     this.context = canvas.getContext("2d") as CanvasRenderingContext2D;
     this.graph = useGraph();
     this.settings = useSettings();
+    this.settings.subscribeToZoom(this.onZoom.bind(this));
     this.viewport = {
       minX: 0,
       maxX: canvas.width,
       minY: 0,
       maxY: canvas.height,
     };
-    this.zoomPercentage = DEFAULT_ZOOM_PERCENTAGE;
     this.fromVertex = null;
     this.isDragging = false;
     this.previousMousePosition = { x: 0, y: 0 };
@@ -52,15 +44,7 @@ export default class Display {
     canvas.addEventListener("mouseup", () => this.onMouseUp());
     canvas.addEventListener("mousemove", (event) => this.onMouseMove(event));
     window.addEventListener("resize", () => {
-      this.updateViewport(
-        this.zoomPercentage,
-        this.canvas.width,
-        this.canvas.height
-      );
-    });
-    canvas.addEventListener("wheel", (event) => {
-      // should this be done in settings/controls?
-      this.onScroll(event);
+      this.onZoom(this.settings.getZoomPercentage());
     });
   }
 
@@ -71,16 +55,13 @@ export default class Display {
     this.drawVertices();
   }
 
-  // TODO: more descriptive/better name for this?
-  // TODO: make this onZoom, move zoomPercentage to settings
-  // call this as a callback when the zoomPercentage changes?
-  private updateViewport(
-    zoomPercentage: number,
-    mouseX: number,
-    mouseY: number
-  ) {
-    const horizontalMouseFactor = mouseX / window.innerWidth;
-    const verticalMouseFactor = mouseY / window.innerHeight;
+  private onZoom(zoomPercentage: number, event?: WheelEvent) {
+    const horizontalMouseFactor = !!event
+      ? event.clientX / this.canvas.width
+      : 0.5;
+    const verticalMouseFactor = !!event
+      ? event.clientY / this.canvas.height
+      : 0.5;
 
     const previousWidth = this.viewport.maxX - this.viewport.minX;
     const previousHeight = this.viewport.maxY - this.viewport.minY;
@@ -218,21 +199,6 @@ export default class Display {
     );
   }
 
-  // This could be moved to controls?
-  private onScroll({ deltaY, clientX, clientY }: WheelEvent) {
-    if (
-      (deltaY > 0 && this.zoomPercentage <= MIN_ZOOM_PERCENTAGE) ||
-      (deltaY < 0 && this.zoomPercentage >= MAX_ZOOM_PERCENTAGE)
-    )
-      return;
-    if (deltaY > 0 && this.zoomPercentage > MIN_ZOOM_PERCENTAGE) {
-      this.zoomPercentage -= 1;
-    } else if (deltaY < 0 && this.zoomPercentage < MAX_ZOOM_PERCENTAGE) {
-      this.zoomPercentage += 1;
-    }
-    this.updateViewport(this.zoomPercentage, clientX, clientY);
-  }
-
   private onMouseDown(event: MouseEvent) {
     const editMode = this.settings.getEditMode();
 
@@ -259,7 +225,8 @@ export default class Display {
     if (!this.isDragging || this.settings.getEditMode() !== "exploration")
       return;
 
-    const zoomDivisor = this.zoomPercentage / DEFAULT_ZOOM_PERCENTAGE;
+    const zoomDivisor =
+      this.settings.getZoomPercentage() / DEFAULT_ZOOM_PERCENTAGE;
     const deltaX = (clientX - this.previousMousePosition.x) / zoomDivisor;
     const deltaY = (clientY - this.previousMousePosition.y) / zoomDivisor;
 
