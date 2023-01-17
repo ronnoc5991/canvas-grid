@@ -10,3 +10,4 @@ TODO: Make the edges bezier curves, allow user to edit them
 TODO: allow zoom buttons to zoom in/out by a given amount
 TODO: Support custom edge colors
 TODO: Support custom vertex colors/appearances?
+TODO: Support making an edge/vertex 'active' (so we can edit/delete it)
