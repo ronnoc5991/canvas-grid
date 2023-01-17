@@ -17,10 +17,6 @@ import { Viewport } from "../types/Viewport";
 import { EDGE_CONFIG } from "../config/line";
 import drawCircle from "../utils/drawCircle";
 
-// we will have to 'select' a vertex (check which one was clicked)
-// make that vertex 'active'
-// when a vertex is 'active', we can delete it?
-
 // settings need to be able to update the zoomPercentage as well...
 
 export default class Display {
@@ -29,7 +25,10 @@ export default class Display {
   private graph: Graph;
   private settings: Settings;
   private viewport: Viewport;
-  private zoomPercentage: number;
+  private zoomPercentage: number; // should this actually live in the settings?
+  // what are the settings?
+  // the settings should be any variable that the user is able to change
+  // the settings do impact what we display...
   private fromVertex: Vertex | null;
   private isDragging: boolean;
   private previousMousePosition: Position;
@@ -60,6 +59,7 @@ export default class Display {
       );
     });
     canvas.addEventListener("wheel", (event) => {
+      // should this be done in settings/controls?
       this.onScroll(event);
     });
   }
@@ -72,6 +72,8 @@ export default class Display {
   }
 
   // TODO: more descriptive/better name for this?
+  // TODO: make this onZoom, move zoomPercentage to settings
+  // call this as a callback when the zoomPercentage changes?
   private updateViewport(
     zoomPercentage: number,
     mouseX: number,
@@ -139,7 +141,7 @@ export default class Display {
     );
 
     xValues.forEach((value) => {
-      const xValue = this.getCanvasXFromRealX(value);
+      const xValue = this.getLocalXFromGlobalX(value);
       drawLine(
         { x: xValue, y: 0 },
         { x: xValue, y: this.canvas.height },
@@ -148,7 +150,7 @@ export default class Display {
     });
 
     yValues.forEach((value) => {
-      const yValue = this.getCanvasYFromRealY(value);
+      const yValue = this.getLocalYFromGlobalY(value);
       drawLine(
         { x: 0, y: yValue },
         { x: this.canvas.width, y: yValue },
@@ -161,12 +163,12 @@ export default class Display {
     this.graph.edges.forEach((edge) => {
       if (!this.isEdgeVisible(edge, this.viewport)) return;
       const fromPosition: Position = {
-        x: this.getCanvasXFromRealX(edge.vertices[0].position.x),
-        y: this.getCanvasYFromRealY(edge.vertices[0].position.y),
+        x: this.getLocalXFromGlobalX(edge.vertices[0].position.x),
+        y: this.getLocalYFromGlobalY(edge.vertices[0].position.y),
       };
       const toPosition: Position = {
-        x: this.getCanvasXFromRealX(edge.vertices[1].position.x),
-        y: this.getCanvasYFromRealY(edge.vertices[1].position.y),
+        x: this.getLocalXFromGlobalX(edge.vertices[1].position.x),
+        y: this.getLocalYFromGlobalY(edge.vertices[1].position.y),
       };
       drawLine(fromPosition, toPosition, this.context, EDGE_CONFIG);
     });
@@ -178,8 +180,8 @@ export default class Display {
         return;
       drawCircle(
         {
-          x: this.getCanvasXFromRealX(position.x),
-          y: this.getCanvasYFromRealY(position.y),
+          x: this.getLocalXFromGlobalX(position.x),
+          y: this.getLocalYFromGlobalY(position.y),
         },
         CIRCLE_CONFIG,
         this.context
@@ -187,16 +189,14 @@ export default class Display {
     });
   }
 
-  // translate "real" coordinates into canvas coordinates
-  private getCanvasXFromRealX(xValue: number): number {
+  private getLocalXFromGlobalX(xValue: number): number {
     return (
       this.canvas.width *
       ((xValue - this.viewport.minX) /
         (this.viewport.maxX - this.viewport.minX))
     );
   }
-
-  private getCanvasYFromRealY(yValue: number): number {
+  private getLocalYFromGlobalY(yValue: number): number {
     return (
       this.canvas.height *
       ((yValue - this.viewport.minY) /
@@ -204,21 +204,21 @@ export default class Display {
     );
   }
 
-  // translate canvas coordinates into real coordinates
-  private getRealXFromCanvasX(xValue: number): number {
+  private getGlobalXFromLocalX(xValue: number): number {
     return (
       this.viewport.minX +
       (this.viewport.maxX - this.viewport.minX) * (xValue / this.canvas.width)
     );
   }
 
-  private getRealYFromCanvasY(yValue: number): number {
+  private getGlobalYFromLocalY(yValue: number): number {
     return (
       this.viewport.minY +
       (this.viewport.maxY - this.viewport.minY) * (yValue / this.canvas.height)
     );
   }
 
+  // This could be moved to controls?
   private onScroll({ deltaY, clientX, clientY }: WheelEvent) {
     if (
       (deltaY > 0 && this.zoomPercentage <= MIN_ZOOM_PERCENTAGE) ||
@@ -255,21 +255,17 @@ export default class Display {
     this.stopDrag();
   }
 
-  private onMouseMove(event: MouseEvent) {
+  private onMouseMove({ clientX, clientY }: MouseEvent) {
     if (!this.isDragging || this.settings.getEditMode() !== "exploration")
       return;
 
-    const currentMousePosition: Position = {
-      x: event.clientX,
-      y: event.clientY,
-    };
-    const deltaX = currentMousePosition.x - this.previousMousePosition.x;
-    const deltaY = currentMousePosition.y - this.previousMousePosition.y;
-    this.previousMousePosition.x = currentMousePosition.x;
-    this.previousMousePosition.y = currentMousePosition.y;
+    const zoomDivisor = this.zoomPercentage / DEFAULT_ZOOM_PERCENTAGE;
+    const deltaX = (clientX - this.previousMousePosition.x) / zoomDivisor;
+    const deltaY = (clientY - this.previousMousePosition.y) / zoomDivisor;
 
-    // TODO: This method results in slower/faster dragging depending on the current zoom level
-    // need to translate these canvas relative values into the underlying coordinate system values?
+    this.previousMousePosition.x = clientX;
+    this.previousMousePosition.y = clientY;
+
     this.viewport.minX -= deltaX;
     this.viewport.maxX -= deltaX;
     this.viewport.minY -= deltaY;
@@ -289,8 +285,8 @@ export default class Display {
   private createVertex({ clientX, clientY }: MouseEvent) {
     const { x, y } = this.canvas.getBoundingClientRect();
     const newVertex = new Vertex({
-      x: this.getRealXFromCanvasX(clientX - x),
-      y: this.getRealYFromCanvasY(clientY - y),
+      x: this.getGlobalXFromLocalX(clientX - x),
+      y: this.getGlobalYFromLocalY(clientY - y),
     });
     this.graph.addVertex(newVertex);
   }
@@ -298,8 +294,8 @@ export default class Display {
   private createEdge({ clientX, clientY }: MouseEvent) {
     const { x, y } = this.canvas.getBoundingClientRect();
     const clickedVertex = this.getClickedVertex({
-      x: this.getRealXFromCanvasX(clientX - x),
-      y: this.getRealYFromCanvasY(clientY - y),
+      x: this.getGlobalXFromLocalX(clientX - x),
+      y: this.getGlobalYFromLocalY(clientY - y),
     });
 
     if (clickedVertex === undefined) return;
