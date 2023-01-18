@@ -1,29 +1,29 @@
 import ids from "../config/ids";
 import { EditMode } from "../types/EditMode";
 
-export default class EditModeController {
-  private explorationButton: HTMLButtonElement;
-  private vertexCreationButton: HTMLButtonElement;
-  private edgeCreationButton: HTMLButtonElement;
+type Setter = (newEditMode: EditMode) => void;
 
-  constructor(private setEditMode: (newEditMode: EditMode) => void) {
-    this.explorationButton = document.getElementById(
+// TODO: does this need to be a class?
+
+export default class EditModeController {
+  constructor(setEditMode: Setter) {
+    const explorationButton = document.getElementById(
       ids.explorationButton
     ) as HTMLButtonElement;
-    this.vertexCreationButton = document.getElementById(
+    const vertexCreationButton = document.getElementById(
       ids.vertexCreationButton
     ) as HTMLButtonElement;
-    this.edgeCreationButton = document.getElementById(
+    const edgeCreationButton = document.getElementById(
       ids.edgeCreationButton
     ) as HTMLButtonElement;
-    this.explorationButton.addEventListener("click", () => {
-      this.setEditMode("exploration");
+    explorationButton.addEventListener("click", () => {
+      setEditMode("exploration");
     });
-    this.vertexCreationButton?.addEventListener("click", () => {
-      this.setEditMode("vertex-creation");
+    vertexCreationButton?.addEventListener("click", () => {
+      setEditMode("vertex-creation");
     });
-    this.edgeCreationButton?.addEventListener("click", () => {
-      this.setEditMode("edge-creation");
+    edgeCreationButton?.addEventListener("click", () => {
+      setEditMode("edge-creation");
     });
   }
 }
