@@ -1,39 +1,40 @@
-import ids from "../config/ids";
-import Vertex from "./Vertex";
-import { CIRCLE_CONFIG } from "../config/circle";
 import { Position } from "../types/Position";
 import Viewport from "./Viewport";
-import Settings from "./Settings";
+import Vertex from "./Vertex";
 import Graph from "./Graph";
-
-// TODO: Creat the Control center...
-// that could have subclasses that handle some of the logic?
-
-// TODO: Combine Controls and Settings?
-// Controls is just a bunch of event listeners
-// it also makes the decisions as to what is allowed
-// to make those decisions, it needs to know about the settings, the graph and the viewport
+import { CIRCLE_CONFIG } from "../config/circle";
+import ids from "../config/ids";
+import { EditMode } from "../types/EditMode";
+import { EdgeVariant } from "../types/EdgeVariant";
 
 // RESPONSIBILITIES:
-// - translate user input into state changes
-// - or is it to CAPTURE user input and dispatch that to the correct parties?
-// we DO need a decision maker, one to combine the state of all the classes and decide what to do
+// - listen for user input, dispatch events accordingly
 
 export default class Controls {
+  private editMode: EditMode;
+  private edgeVariant: EdgeVariant;
+  private isDragging: boolean;
+  private previousMousePosition: Position;
+  private edgeCreationButton: HTMLButtonElement;
   private explorationButton: HTMLButtonElement;
   private vertexCreationButton: HTMLButtonElement;
-  private edgeCreationButton: HTMLButtonElement;
-  private unidirectionalRadioButton: HTMLElement;
   private bidirectionalRadioButton: HTMLElement;
+  private unidirectionalRadioButton: HTMLElement;
   private zoomInButton: HTMLButtonElement;
   private zoomOutButton: HTMLButtonElement;
 
   constructor(
     private canvas: HTMLCanvasElement,
-    private settings: Settings,
     private viewport: Viewport,
     private graph: Graph
   ) {
+    this.editMode = "exploration";
+    this.edgeVariant = "bidirectional";
+    this.isDragging = false;
+    this.previousMousePosition = {
+      x: 0,
+      y: 0,
+    };
     this.explorationButton = document.getElementById(
       ids.explorationButton
     ) as HTMLButtonElement;
@@ -57,19 +58,19 @@ export default class Controls {
     ) as HTMLButtonElement;
 
     this.explorationButton.addEventListener("click", () => {
-      this.settings.editMode = "exploration";
+      this.editMode = "exploration";
     });
     this.vertexCreationButton?.addEventListener("click", () => {
-      this.settings.editMode = "vertex-creation";
+      this.editMode = "vertex-creation";
     });
     this.edgeCreationButton?.addEventListener("click", () => {
-      this.settings.editMode = "edge-creation";
+      this.editMode = "edge-creation";
     });
     this.bidirectionalRadioButton.addEventListener("click", () => {
-      this.settings.edgeVariant = "bidirectional";
+      this.edgeVariant = "bidirectional";
     });
     this.unidirectionalRadioButton.addEventListener("click", () => {
-      this.settings.edgeVariant = "unidirectional";
+      this.edgeVariant = "unidirectional";
     });
     this.canvas.addEventListener("wheel", (event) => {
       this.viewport.onScroll(event);
@@ -92,12 +93,12 @@ export default class Controls {
   }
 
   private onMouseDown(event: MouseEvent) {
-    switch (this.settings.editMode) {
+    switch (this.editMode) {
       case "exploration":
         this.startDrag(event);
         break;
       case "vertex-creation":
-        // this.createVertex(event);
+        this.createVertex(event);
         break;
       case "edge-creation":
         // this.createEdge(event);
@@ -112,27 +113,25 @@ export default class Controls {
   }
 
   private onMouseMove(event: MouseEvent) {
-    if (!this.settings.isDragging || this.settings.editMode !== "exploration")
-      return;
+    if (!this.isDragging || this.editMode !== "exploration") return;
 
     this.onDrag(event);
   }
 
   private startDrag({ clientX, clientY }: MouseEvent) {
-    this.settings.isDragging = true;
-    this.settings.setPreviousMousePosition(clientX, clientY);
+    this.isDragging = true;
+    this.setPreviousMousePosition(clientX, clientY);
   }
 
   private stopDrag() {
-    this.settings.isDragging = false;
+    this.isDragging = false;
   }
 
   private onDrag({ clientX, clientY }: MouseEvent) {
-    const { previousMousePosition } = this.settings;
-    const deltaX = clientX - previousMousePosition.x;
-    const deltaY = clientY - previousMousePosition.y;
+    const deltaX = clientX - this.previousMousePosition.x;
+    const deltaY = clientY - this.previousMousePosition.y;
 
-    this.settings.setPreviousMousePosition(clientX, clientY);
+    this.setPreviousMousePosition(clientX, clientY);
     this.viewport.onDrag(deltaX, deltaY);
   }
 
@@ -198,5 +197,10 @@ export default class Controls {
       viewport.minY +
       (viewport.maxY - viewport.minY) * (yValue / this.canvas.height)
     );
+  }
+
+  private setPreviousMousePosition(x: number, y: number) {
+    this.previousMousePosition.x = x;
+    this.previousMousePosition.y = y;
   }
 }

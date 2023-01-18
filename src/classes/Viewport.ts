@@ -8,8 +8,8 @@ import {
 type Subscriber = (viewport: Viewport) => void;
 
 // RESPONSIBILITES:
-// - calculate new viewport based on zoom/drag
-// - update subscribers when viewport changes
+// - calculate new viewport dimensions based on zoom/drag
+// - update subscribers on changes
 
 export default class Viewport {
   private subscribers: Array<Subscriber> = [];

@@ -5,7 +5,7 @@ export type CircleConfig = {
 };
 
 export const CIRCLE_CONFIG = {
-  radius: 12,
+  radius: 8,
   stroke: {
     width: 1,
     color: "#000000",
