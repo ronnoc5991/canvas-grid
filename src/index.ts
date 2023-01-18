@@ -1,13 +1,13 @@
-import { containerId, canvasId } from "./config/ids";
 import Settings from "./classes/Settings";
 import Viewport from "./classes/Viewport";
 import Graph from "./classes/Graph";
 import Controls from "./classes/Controls";
 import Display from "./classes/Display";
+import ids from "./config/ids";
 import "./style.css";
 
-const container = document.getElementById(containerId);
-const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+const container = document.getElementById(ids.container);
+const canvas = document.getElementById(ids.canvas) as HTMLCanvasElement;
 
 function onResize() {
   canvas.width = container?.offsetWidth ?? 0;
@@ -17,8 +17,10 @@ function onResize() {
 window.addEventListener("resize", onResize);
 
 onResize();
+
 const settings = new Settings();
 const viewport = new Viewport(canvas);
 const graph = new Graph();
-new Controls(settings, viewport, graph);
-new Display(canvas, viewport, graph);
+new Controls(canvas, settings, viewport, graph);
+const display = new Display(canvas, viewport, graph);
+display.update();
