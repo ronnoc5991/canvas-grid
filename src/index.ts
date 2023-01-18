@@ -21,4 +21,4 @@ const settings = new Settings();
 const viewport = new Viewport(canvas);
 const graph = new Graph();
 new Controls(settings, viewport, graph);
-new Display(canvas);
+new Display(canvas, viewport, graph);
