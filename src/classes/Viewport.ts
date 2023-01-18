@@ -1,4 +1,9 @@
-import { DEFAULT_ZOOM_PERCENTAGE } from "../config/constants";
+import {
+  DEFAULT_ZOOM_PERCENTAGE,
+  MAX_ZOOM_PERCENTAGE,
+  MIN_ZOOM_PERCENTAGE,
+  ZOOM_STEP_SIZE,
+} from "../config/constants";
 
 type Subscriber = (viewport: Viewport) => void;
 
@@ -8,7 +13,7 @@ type Subscriber = (viewport: Viewport) => void;
 
 export default class Viewport {
   private subscribers: Array<Subscriber> = [];
-  public zoomPercentage: number;
+  private zoomPercentage: number;
   public minX: number;
   public maxX: number;
   public minY: number;
@@ -45,9 +50,37 @@ export default class Viewport {
     this.publish();
   }
 
-  public zoom(newZoomPercentage: number, event?: WheelEvent) {
-    this.zoomPercentage = newZoomPercentage;
-    this.onZoom(event);
+  public onScroll(event: WheelEvent) {
+    if (!this.isZoomAllowed(event.deltaY)) return;
+
+    if (event.deltaY > 0 && this.zoomPercentage > MIN_ZOOM_PERCENTAGE) {
+      this.zoomPercentage -= 1;
+      this.onZoom(event);
+    } else if (event.deltaY < 0 && this.zoomPercentage < MAX_ZOOM_PERCENTAGE) {
+      this.zoomPercentage += 1;
+      this.onZoom(event);
+    }
+  }
+
+  public onZoomIn() {
+    if (!this.isZoomAllowed(ZOOM_STEP_SIZE)) return;
+    const allowance = MAX_ZOOM_PERCENTAGE - this.zoomPercentage;
+    this.zoomPercentage += Math.min(allowance, ZOOM_STEP_SIZE);
+    this.onZoom();
+  }
+
+  public onZoomOut() {
+    if (!this.isZoomAllowed(-ZOOM_STEP_SIZE)) return;
+    const allowance = this.zoomPercentage - MIN_ZOOM_PERCENTAGE;
+    this.zoomPercentage -= Math.min(allowance, ZOOM_STEP_SIZE);
+    this.onZoom();
+  }
+
+  private isZoomAllowed(deltaY: number) {
+    return !(
+      (deltaY > 0 && this.zoomPercentage < MIN_ZOOM_PERCENTAGE) ||
+      (deltaY < 0 && this.zoomPercentage > MAX_ZOOM_PERCENTAGE)
+    );
   }
 
   private onZoom(event?: WheelEvent) {
@@ -79,7 +112,7 @@ export default class Viewport {
     this.update(-minXDelta, maxXDelta, -minYDelta, maxYDelta);
   }
 
-  public translate(deltaX: number, deltaY: number) {
+  public onDrag(deltaX: number, deltaY: number) {
     const zoomDivisor = this.zoomPercentage / DEFAULT_ZOOM_PERCENTAGE;
     const scaledDeltaX = deltaX / zoomDivisor;
     const scaleddeltaY = deltaY / zoomDivisor;
