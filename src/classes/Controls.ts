@@ -6,6 +6,7 @@ import { CIRCLE_CONFIG } from "../config/circle";
 import ids from "../config/ids";
 import { EditMode } from "../types/EditMode";
 import { EdgeVariant } from "../types/EdgeVariant";
+import EditModeController from "./EditModeController";
 
 // RESPONSIBILITIES:
 // - listen for user input, dispatch events accordingly
@@ -15,9 +16,6 @@ export default class Controls {
   private edgeVariant: EdgeVariant;
   private isDragging: boolean;
   private previousMousePosition: Position;
-  private edgeCreationButton: HTMLButtonElement;
-  private explorationButton: HTMLButtonElement;
-  private vertexCreationButton: HTMLButtonElement;
   private bidirectionalRadioButton: HTMLElement;
   private unidirectionalRadioButton: HTMLElement;
   private zoomInButton: HTMLButtonElement;
@@ -29,21 +27,15 @@ export default class Controls {
     private graph: Graph
   ) {
     this.editMode = "exploration";
+    new EditModeController((newEditMode) => {
+      this.editMode = newEditMode;
+    });
     this.edgeVariant = "bidirectional";
     this.isDragging = false;
     this.previousMousePosition = {
       x: 0,
       y: 0,
     };
-    this.explorationButton = document.getElementById(
-      ids.explorationButton
-    ) as HTMLButtonElement;
-    this.vertexCreationButton = document.getElementById(
-      ids.vertexCreationButton
-    ) as HTMLButtonElement;
-    this.edgeCreationButton = document.getElementById(
-      ids.edgeCreationButton
-    ) as HTMLButtonElement;
     this.unidirectionalRadioButton = document.getElementById(
       ids.unidirectionalRadioButton
     ) as HTMLElement;
@@ -56,16 +48,6 @@ export default class Controls {
     this.zoomInButton = document.getElementById(
       ids.zoomInButton
     ) as HTMLButtonElement;
-
-    this.explorationButton.addEventListener("click", () => {
-      this.editMode = "exploration";
-    });
-    this.vertexCreationButton?.addEventListener("click", () => {
-      this.editMode = "vertex-creation";
-    });
-    this.edgeCreationButton?.addEventListener("click", () => {
-      this.editMode = "edge-creation";
-    });
     this.bidirectionalRadioButton.addEventListener("click", () => {
       this.edgeVariant = "bidirectional";
     });
