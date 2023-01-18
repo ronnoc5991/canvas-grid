@@ -1,6 +1,5 @@
 import { DEFAULT_ZOOM_PERCENTAGE } from "../config/constants";
 import { canvasId } from "../config/ids";
-import State from "./State";
 
 type Subscriber = (viewport: Viewport) => void;
 
@@ -9,24 +8,31 @@ type Subscriber = (viewport: Viewport) => void;
 // - update subscribers when viewport changes
 
 export default class Viewport {
+  private canvas: HTMLCanvasElement;
+  private subscribers: Array<Subscriber> = [];
+  public zoomPercentage: number;
   public minX: number;
   public maxX: number;
   public minY: number;
   public maxY: number;
-  private canvas: HTMLCanvasElement;
-  private subscribers: Array<Subscriber> = [];
 
   constructor() {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+    this.zoomPercentage = DEFAULT_ZOOM_PERCENTAGE;
     this.minX = 0;
     this.maxX = this.canvas.width;
     this.minY = 0;
     this.maxY = this.canvas.height;
-    State.subscribeToZoom(this.zoom.bind(this));
   }
 
   public subscribe(subscriber: Subscriber) {
     this.subscribers.push(subscriber);
+  }
+
+  private publish() {
+    this.subscribers.forEach((subscriber) => {
+      subscriber(this);
+    });
   }
 
   private update(
@@ -39,12 +45,15 @@ export default class Viewport {
     this.maxX += maxXDelta;
     this.minY += minYDelta;
     this.maxY += maxYDelta;
-    this.subscribers.forEach((subscriber) => {
-      subscriber(this);
-    });
+    this.publish();
   }
 
-  private zoom(zoomPercentage: number, event?: WheelEvent) {
+  public zoom(newZoomPercentage: number, event?: WheelEvent) {
+    this.zoomPercentage = newZoomPercentage;
+    this.onZoom(event);
+  }
+
+  private onZoom(event?: WheelEvent) {
     const horizontalMouseFactor = !!event
       ? event.clientX / this.canvas.width
       : 0.5;
@@ -56,10 +65,10 @@ export default class Viewport {
     const previousHeight = this.maxY - this.minY;
 
     const newWidth = Math.round(
-      this.canvas.width * (DEFAULT_ZOOM_PERCENTAGE / zoomPercentage)
+      this.canvas.width * (DEFAULT_ZOOM_PERCENTAGE / this.zoomPercentage)
     );
     const newHeight = Math.round(
-      this.canvas.height * (DEFAULT_ZOOM_PERCENTAGE / zoomPercentage)
+      this.canvas.height * (DEFAULT_ZOOM_PERCENTAGE / this.zoomPercentage)
     );
 
     const deltaX = newWidth - previousWidth;
@@ -73,8 +82,8 @@ export default class Viewport {
     this.update(-minXDelta, maxXDelta, -minYDelta, maxYDelta);
   }
 
-  public translate(deltaX: number, deltaY: number, zoomPercentage: number) {
-    const zoomDivisor = zoomPercentage / DEFAULT_ZOOM_PERCENTAGE;
+  public translate(deltaX: number, deltaY: number) {
+    const zoomDivisor = this.zoomPercentage / DEFAULT_ZOOM_PERCENTAGE;
     const scaledDeltaX = deltaX / zoomDivisor;
     const scaleddeltaY = deltaY / zoomDivisor;
 
