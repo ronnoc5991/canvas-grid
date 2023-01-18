@@ -1,4 +1,8 @@
 import { containerId, canvasId } from "./config/ids";
+import Settings from "./classes/Settings";
+import Viewport from "./classes/Viewport";
+import Graph from "./classes/Graph";
+import Controls from "./classes/Controls";
 import Display from "./classes/Display";
 import "./style.css";
 
@@ -10,13 +14,11 @@ function onResize() {
   canvas.height = container?.offsetHeight ?? 0;
 }
 
-function updateDisplay() {
-  display.update();
-  requestAnimationFrame(() => updateDisplay());
-}
-
 window.addEventListener("resize", onResize);
 
 onResize();
-const display = new Display(canvas);
-updateDisplay();
+const settings = new Settings();
+const viewport = new Viewport(canvas);
+const graph = new Graph();
+new Controls(settings, viewport, graph);
+new Display(canvas);

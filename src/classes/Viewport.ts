@@ -1,5 +1,4 @@
 import { DEFAULT_ZOOM_PERCENTAGE } from "../config/constants";
-import { canvasId } from "../config/ids";
 
 type Subscriber = (viewport: Viewport) => void;
 
@@ -8,7 +7,6 @@ type Subscriber = (viewport: Viewport) => void;
 // - update subscribers when viewport changes
 
 export default class Viewport {
-  private canvas: HTMLCanvasElement;
   private subscribers: Array<Subscriber> = [];
   public zoomPercentage: number;
   public minX: number;
@@ -16,8 +14,7 @@ export default class Viewport {
   public minY: number;
   public maxY: number;
 
-  constructor() {
-    this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+  constructor(private canvas: HTMLCanvasElement) {
     this.zoomPercentage = DEFAULT_ZOOM_PERCENTAGE;
     this.minX = 0;
     this.maxX = this.canvas.width;
