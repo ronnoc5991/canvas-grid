@@ -1,128 +1,50 @@
-import type { Position } from "../types/Position";
+import { Position } from "../types/Position";
+import Viewport from "./Viewport";
 import Graph from "./Graph";
-import useGraph from "../hooks/useGraph";
-import drawLine from "../utils/drawLine";
-import {
-  DEFAULT_BLOCK_SIZE,
-  DEFAULT_ZOOM_PERCENTAGE,
-} from "../config/constants";
-import Settings from "./Settings";
-import useSettings from "../hooks/useSettings";
-import Vertex from "./Vertex";
-import { CIRCLE_CONFIG } from "../config/circle";
 import Edge from "./Edge";
-import { Viewport } from "../types/Viewport";
+import { CIRCLE_CONFIG } from "../config/circle";
 import { EDGE_CONFIG } from "../config/line";
+import drawLine from "../utils/drawLine";
 import drawCircle from "../utils/drawCircle";
+import { DEFAULT_BLOCK_SIZE } from "../config/constants";
+
+// RESPONSIBILITES:
+// - Draw what is inside of the current viewport
 
 export default class Display {
-  private canvas: HTMLCanvasElement;
   private context: CanvasRenderingContext2D;
-  private graph: Graph;
-  private settings: Settings;
-  private viewport: Viewport;
-  private fromVertex: Vertex | null;
-  private isDragging: boolean;
-  private previousMousePosition: Position;
 
-  public constructor(canvas: HTMLCanvasElement) {
-    this.canvas = canvas;
+  public constructor(
+    private canvas: HTMLCanvasElement,
+    private viewport: Viewport,
+    private graph: Graph
+  ) {
     this.context = canvas.getContext("2d") as CanvasRenderingContext2D;
-    this.graph = useGraph();
-    this.settings = useSettings();
-    this.settings.subscribeToZoom(this.onZoom.bind(this));
-    this.viewport = {
-      minX: 0,
-      maxX: canvas.width,
-      minY: 0,
-      maxY: canvas.height,
-    };
-    this.fromVertex = null;
-    this.isDragging = false;
-    this.previousMousePosition = { x: 0, y: 0 };
-    canvas.addEventListener("mousedown", (event) => this.onMouseDown(event));
-    canvas.addEventListener("mouseup", () => this.onMouseUp());
-    canvas.addEventListener("mousemove", (event) => this.onMouseMove(event));
-    window.addEventListener("resize", () => {
-      this.onZoom(this.settings.getZoomPercentage());
-    });
+    this.viewport.subscribe(this.update.bind(this));
+    this.graph.subscribe(this.update.bind(this));
   }
 
   public update() {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.drawGrid();
-    this.drawEdges();
-    this.drawVertices();
+    this.drawGrid(this.viewport);
+    this.drawEdges(this.viewport, this.graph);
+    this.drawVertices(this.viewport, this.graph);
   }
 
-  private onZoom(zoomPercentage: number, event?: WheelEvent) {
-    const horizontalMouseFactor = !!event
-      ? event.clientX / this.canvas.width
-      : 0.5;
-    const verticalMouseFactor = !!event
-      ? event.clientY / this.canvas.height
-      : 0.5;
-
-    const previousWidth = this.viewport.maxX - this.viewport.minX;
-    const previousHeight = this.viewport.maxY - this.viewport.minY;
-
-    const newWidth = Math.round(
-      this.canvas.width * (DEFAULT_ZOOM_PERCENTAGE / zoomPercentage)
-    );
-    const newHeight = Math.round(
-      this.canvas.height * (DEFAULT_ZOOM_PERCENTAGE / zoomPercentage)
-    );
-
-    const deltaX = newWidth - previousWidth;
-    const deltaY = newHeight - previousHeight;
-
-    const minXDelta = deltaX * horizontalMouseFactor;
-    const maxXDelta = deltaX - minXDelta;
-    const minYDelta = deltaY * verticalMouseFactor;
-    const maxYDelta = deltaY - minYDelta;
-
-    this.viewport.minX -= minXDelta;
-    this.viewport.maxX += maxXDelta;
-    this.viewport.minY -= minYDelta;
-    this.viewport.maxY += maxYDelta;
-  }
-
-  private getLineValues(
-    min: number,
-    max: number,
-    blockSize: number
-  ): Array<number> {
-    let startingValue: number = 0;
-    const lineValues: Array<number> = [];
-
-    for (let i = min; i <= max; i++) {
-      if (i % blockSize === 0) {
-        startingValue = i;
-        break;
-      }
-    }
-
-    for (let i = startingValue; i <= max; i += blockSize) {
-      lineValues.push(i);
-    }
-
-    return lineValues;
-  }
-
-  private drawGrid() {
+  private drawGrid(viewport: Viewport) {
     const xValues: Array<number> = this.getLineValues(
-      Math.round(this.viewport.minX),
-      Math.round(this.viewport.maxX),
+      Math.round(viewport.minX),
+      Math.round(viewport.maxX),
       DEFAULT_BLOCK_SIZE
     );
     const yValues: Array<number> = this.getLineValues(
-      Math.round(this.viewport.minY),
-      Math.round(this.viewport.maxY),
+      Math.round(viewport.minY),
+      Math.round(viewport.maxY),
       DEFAULT_BLOCK_SIZE
     );
 
     xValues.forEach((value) => {
-      const xValue = this.getLocalXFromGlobalX(value);
+      const xValue = this.getLocalXFromGlobalX(value, viewport);
       drawLine(
         { x: xValue, y: 0 },
         { x: xValue, y: this.canvas.height },
@@ -131,7 +53,7 @@ export default class Display {
     });
 
     yValues.forEach((value) => {
-      const yValue = this.getLocalYFromGlobalY(value);
+      const yValue = this.getLocalYFromGlobalY(value, viewport);
       drawLine(
         { x: 0, y: yValue },
         { x: this.canvas.width, y: yValue },
@@ -140,29 +62,29 @@ export default class Display {
     });
   }
 
-  private drawEdges() {
-    this.graph.edges.forEach((edge) => {
-      if (!this.isEdgeVisible(edge, this.viewport)) return;
+  private drawEdges(viewport: Viewport, graph: Graph) {
+    graph.edges.forEach((edge) => {
+      if (!this.isEdgeVisible(edge, viewport)) return;
       const fromPosition: Position = {
-        x: this.getLocalXFromGlobalX(edge.vertices[0].position.x),
-        y: this.getLocalYFromGlobalY(edge.vertices[0].position.y),
+        x: this.getLocalXFromGlobalX(edge.vertices[0].position.x, viewport),
+        y: this.getLocalYFromGlobalY(edge.vertices[0].position.y, viewport),
       };
       const toPosition: Position = {
-        x: this.getLocalXFromGlobalX(edge.vertices[1].position.x),
-        y: this.getLocalYFromGlobalY(edge.vertices[1].position.y),
+        x: this.getLocalXFromGlobalX(edge.vertices[1].position.x, viewport),
+        y: this.getLocalYFromGlobalY(edge.vertices[1].position.y, viewport),
       };
       drawLine(fromPosition, toPosition, this.context, EDGE_CONFIG);
     });
   }
 
-  private drawVertices() {
-    this.graph.vertices.forEach(({ position }) => {
-      if (!this.isVertexVisible(position, CIRCLE_CONFIG.radius, this.viewport))
+  private drawVertices(viewport: Viewport, graph: Graph) {
+    graph.vertices.forEach(({ position }) => {
+      if (!this.isVertexVisible(position, CIRCLE_CONFIG.radius, viewport))
         return;
       drawCircle(
         {
-          x: this.getLocalXFromGlobalX(position.x),
-          y: this.getLocalYFromGlobalY(position.y),
+          x: this.getLocalXFromGlobalX(position.x, viewport),
+          y: this.getLocalYFromGlobalY(position.y, viewport),
         },
         CIRCLE_CONFIG,
         this.context
@@ -170,137 +92,17 @@ export default class Display {
     });
   }
 
-  private getLocalXFromGlobalX(xValue: number): number {
+  private getLocalXFromGlobalX(xValue: number, viewport: Viewport): number {
     return (
       this.canvas.width *
-      ((xValue - this.viewport.minX) /
-        (this.viewport.maxX - this.viewport.minX))
+      ((xValue - viewport.minX) / (viewport.maxX - viewport.minX))
     );
   }
-  private getLocalYFromGlobalY(yValue: number): number {
+  private getLocalYFromGlobalY(yValue: number, viewport: Viewport): number {
     return (
       this.canvas.height *
-      ((yValue - this.viewport.minY) /
-        (this.viewport.maxY - this.viewport.minY))
+      ((yValue - viewport.minY) / (viewport.maxY - viewport.minY))
     );
-  }
-
-  private getGlobalXFromLocalX(xValue: number): number {
-    return (
-      this.viewport.minX +
-      (this.viewport.maxX - this.viewport.minX) * (xValue / this.canvas.width)
-    );
-  }
-
-  private getGlobalYFromLocalY(yValue: number): number {
-    return (
-      this.viewport.minY +
-      (this.viewport.maxY - this.viewport.minY) * (yValue / this.canvas.height)
-    );
-  }
-
-  private onMouseDown(event: MouseEvent) {
-    const editMode = this.settings.getEditMode();
-
-    switch (editMode) {
-      case "exploration":
-        this.startDrag(event);
-        break;
-      case "vertex-creation":
-        this.createVertex(event);
-        break;
-      case "edge-creation":
-        this.createEdge(event);
-        break;
-      default:
-      // do nothing
-    }
-  }
-
-  private onMouseUp() {
-    this.stopDrag();
-  }
-
-  private onMouseMove({ clientX, clientY }: MouseEvent) {
-    if (!this.isDragging || this.settings.getEditMode() !== "exploration")
-      return;
-
-    const zoomDivisor =
-      this.settings.getZoomPercentage() / DEFAULT_ZOOM_PERCENTAGE;
-    const deltaX = (clientX - this.previousMousePosition.x) / zoomDivisor;
-    const deltaY = (clientY - this.previousMousePosition.y) / zoomDivisor;
-
-    this.previousMousePosition.x = clientX;
-    this.previousMousePosition.y = clientY;
-
-    this.viewport.minX -= deltaX;
-    this.viewport.maxX -= deltaX;
-    this.viewport.minY -= deltaY;
-    this.viewport.maxY -= deltaY;
-  }
-
-  private startDrag({ clientX, clientY }: MouseEvent) {
-    this.isDragging = true;
-    this.previousMousePosition.x = clientX;
-    this.previousMousePosition.y = clientY;
-  }
-
-  private stopDrag() {
-    this.isDragging = false;
-  }
-
-  private createVertex({ clientX, clientY }: MouseEvent) {
-    const { x, y } = this.canvas.getBoundingClientRect();
-    const newVertex = new Vertex({
-      x: this.getGlobalXFromLocalX(clientX - x),
-      y: this.getGlobalYFromLocalY(clientY - y),
-    });
-    this.graph.addVertex(newVertex);
-  }
-
-  private createEdge({ clientX, clientY }: MouseEvent) {
-    const { x, y } = this.canvas.getBoundingClientRect();
-    const clickedVertex = this.getClickedVertex({
-      x: this.getGlobalXFromLocalX(clientX - x),
-      y: this.getGlobalYFromLocalY(clientY - y),
-    });
-
-    if (clickedVertex === undefined) return;
-
-    if (this.fromVertex === null) {
-      this.fromVertex = clickedVertex;
-    } else {
-      const euclideanDistance = Math.sqrt(
-        Math.pow(this.fromVertex.position.x - clickedVertex.position.x, 2) +
-          Math.pow(this.fromVertex.position.y - clickedVertex.position.y, 2)
-      );
-      const newEdge = new Edge(euclideanDistance, [
-        this.fromVertex,
-        clickedVertex,
-      ]);
-      this.graph.addEdge(newEdge);
-
-      this.fromVertex.addEdge(newEdge);
-      if (this.settings.getEdgeVariant() === "bidirectional")
-        clickedVertex.addEdge(newEdge);
-
-      this.fromVertex = null;
-    }
-  }
-
-  private getClickedVertex(clickedPosition: Position): Vertex | undefined {
-    return this.graph.vertices.find(({ position }) => {
-      const leftEdge = position.x - CIRCLE_CONFIG.radius;
-      const rightEdge = position.x + CIRCLE_CONFIG.radius;
-      const topEdge = position.y - CIRCLE_CONFIG.radius;
-      const bottomEdge = position.y + CIRCLE_CONFIG.radius;
-      return (
-        clickedPosition.x >= leftEdge &&
-        clickedPosition.x <= rightEdge &&
-        clickedPosition.y >= topEdge &&
-        clickedPosition.y <= bottomEdge
-      );
-    });
   }
 
   private isVertexVisible(
@@ -328,8 +130,7 @@ export default class Display {
     return false;
   }
 
-  // TODO: This is not the best way to do this...
-  // instead, we need to see if any of the "box" that surrounds the edge is visible?
+  // TODO: we need to see if any of the "box" that surrounds the edge is visible?
   private isEdgeVisible({ vertices }: Edge, viewport: Viewport) {
     return (
       (vertices[0].position.x > viewport.minX &&
@@ -341,5 +142,27 @@ export default class Display {
         vertices[1].position.y > viewport.minY &&
         vertices[1].position.y < viewport.maxY)
     );
+  }
+
+  private getLineValues(
+    min: number,
+    max: number,
+    blockSize: number
+  ): Array<number> {
+    let startingValue: number = 0;
+    const lineValues: Array<number> = [];
+
+    for (let i = min; i <= max; i++) {
+      if (i % blockSize === 0) {
+        startingValue = i;
+        break;
+      }
+    }
+
+    for (let i = startingValue; i <= max; i += blockSize) {
+      lineValues.push(i);
+    }
+
+    return lineValues;
   }
 }
