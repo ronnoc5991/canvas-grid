@@ -37,6 +37,10 @@ export default class Viewport {
     });
   }
 
+  public onResize() {
+    this.onZoom();
+  }
+
   private update(
     minXDelta: number,
     maxXDelta: number,
