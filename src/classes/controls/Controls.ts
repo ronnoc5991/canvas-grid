@@ -8,6 +8,7 @@ import { EdgeVariant } from "../../types/EdgeVariant";
 import EditModeController from "./EditModeController";
 import EdgeVariantController from "./EdgeVariantController";
 import ZoomController, { Zoom } from "./ZoomController";
+import Edge from "../graph/Edge";
 
 // RESPONSIBILITIES:
 // - listen for user input, dispatch events accordingly
@@ -17,6 +18,7 @@ export default class Controls {
   private edgeVariant: EdgeVariant;
   private isDragging: boolean;
   private previousMousePosition: Position;
+  private fromVertex: Vertex | null;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -37,6 +39,7 @@ export default class Controls {
       x: 0,
       y: 0,
     };
+    this.fromVertex = null;
 
     this.canvas.addEventListener("mousedown", (event) => {
       this.onMouseDown(event);
@@ -74,7 +77,7 @@ export default class Controls {
         this.createVertex(event);
         break;
       case "edge-creation":
-        // this.createEdge(event);
+        this.createEdge(event);
         break;
       default:
       // do nothing
@@ -124,23 +127,22 @@ export default class Controls {
       y: this.getGlobalYFromLocalY(clientY - y, this.viewport),
     });
     if (clickedVertex === undefined) return;
-    // if (this.fromVertex === null) {
-    //   this.fromVertex = clickedVertex;
-    // } else {
-    //   const euclideanDistance = Math.sqrt(
-    //     Math.pow(this.fromVertex.position.x - clickedVertex.position.x, 2) +
-    //       Math.pow(this.fromVertex.position.y - clickedVertex.position.y, 2)
-    //   );
-    //   const newEdge = new Edge(euclideanDistance, [
-    //     this.fromVertex,
-    //     clickedVertex,
-    //   ]);
-    //   this.graph.addEdge(newEdge);
-    //   this.fromVertex.addEdge(newEdge);
-    //   if (this.settings.edgeVariant === "bidirectional")
-    //     clickedVertex.addEdge(newEdge);
-    //   this.fromVertex = null;
-    // }
+    if (this.fromVertex === null) {
+      this.fromVertex = clickedVertex;
+    } else {
+      const euclideanDistance = Math.sqrt(
+        Math.pow(this.fromVertex.position.x - clickedVertex.position.x, 2) +
+          Math.pow(this.fromVertex.position.y - clickedVertex.position.y, 2)
+      );
+      const newEdge = new Edge(euclideanDistance, [
+        this.fromVertex,
+        clickedVertex,
+      ]);
+      this.graph.addEdge(newEdge);
+      this.fromVertex.addEdge(newEdge);
+      if (this.edgeVariant === "bidirectional") clickedVertex.addEdge(newEdge);
+      this.fromVertex = null;
+    }
   }
 
   private getClickedVertex(clickedPosition: Position): Vertex | undefined {
