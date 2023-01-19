@@ -4,8 +4,8 @@ export default {
   edgeCreationButton: "edge-creation-button",
   explorationButton: "exploration-button",
   vertexCreationButton: "vertex-creation-button",
-  bidirectionalRadioButton: "bidirectional",
-  unidirectionalRadioButton: "unidirectional",
+  bidirectionalEdgeButton: "bidirectional-edge-button",
+  unidirectionalEdgeButton: "unidirectional-edge-button",
   zoomInButton: "zoom-in",
   zoomOutButton: "zoom-out",
 };

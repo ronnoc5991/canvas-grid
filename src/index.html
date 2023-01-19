@@ -7,32 +7,19 @@
     <title>Canvas Grid</title>
   </head>
   <body>
+    <div class="canvas-container" id="canvas-container">
+      <canvas id="canvas"></canvas>
+    </div>
     <div class="settings">
       <button id="exploration-button">Exploration</button>
       <button id="vertex-creation-button">Vertex Creation</button>
       <button id="edge-creation-button">Edge Creation</button>
-      <input
-        type="radio"
-        id="bidirectional"
-        name="edge-type"
-        value="bidirectional"
-        checked
-      />
-      <label for="bidirectional">Bidirectional</label>
-      <input
-        type="radio"
-        id="unidirectional"
-        name="edge-type"
-        value="unidirectional"
-      />
-      <label for="unidirectional">Unidirectional</label>
-      <div class="zoom-controls">
-        <button id="zoom-out">-</button>
-        <button id="zoom-in">+</button>
-      </div>
+      <button id="bidirectional-edge-button">Bi</button>
+      <button id="unidirectional-edge-button">Uni</button>
     </div>
-    <div class="canvas-container" id="canvas-container">
-      <canvas id="canvas"></canvas>
+    <div class="zoom-controls">
+      <button id="zoom-in">+</button>
+      <button id="zoom-out">-</button>
     </div>
   </body>
 </html>

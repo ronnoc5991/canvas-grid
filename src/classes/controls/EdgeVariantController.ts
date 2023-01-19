@@ -7,16 +7,16 @@ type Setter = (newEdgeVariant: EdgeVariant) => void;
 
 export default class EdgeVariantController {
   constructor(setEdgeVariant: Setter) {
-    const unidirectionalRadioButton = document.getElementById(
-      ids.unidirectionalRadioButton
-    ) as HTMLElement;
-    const bidirectionalRadioButton = document.getElementById(
-      ids.bidirectionalRadioButton
-    ) as HTMLElement;
-    bidirectionalRadioButton.addEventListener("click", () => {
+    const unidirectionalEdgeButton = document.getElementById(
+      ids.unidirectionalEdgeButton
+    ) as HTMLButtonElement;
+    const bidirectionalEdgeButton = document.getElementById(
+      ids.bidirectionalEdgeButton
+    ) as HTMLButtonElement;
+    bidirectionalEdgeButton.addEventListener("click", () => {
       setEdgeVariant("bidirectional");
     });
-    unidirectionalRadioButton.addEventListener("click", () => {
+    unidirectionalEdgeButton.addEventListener("click", () => {
       setEdgeVariant("unidirectional");
     });
   }
