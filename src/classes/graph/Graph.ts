@@ -1,5 +1,6 @@
 import Vertex from "./Vertex";
 import Edge from "./Edge";
+import { Position } from "../../types/Position";
 
 type Subscriber = (graph: Graph) => void;
 
@@ -7,11 +8,13 @@ export default class Graph {
   public vertices: Array<Vertex>;
   public edges: Array<Edge>;
   private subscribers: Array<Subscriber>;
+  private vertexCount: number;
 
   constructor() {
     this.vertices = [];
     this.edges = [];
     this.subscribers = [];
+    this.vertexCount = 0;
   }
 
   public subscribe(subscriber: Subscriber) {
@@ -24,9 +27,12 @@ export default class Graph {
     });
   }
 
-  public addVertex(vertex: Vertex) {
-    this.vertices.push(vertex);
+  public createVertex(position: Position): Vertex {
+    this.vertexCount += 1;
+    const newVertex = new Vertex(position, `Node ${this.vertexCount}`);
+    this.vertices.push(newVertex);
     this.publish();
+    return newVertex;
   }
 
   public addEdge(edge: Edge) {
