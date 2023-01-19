@@ -1,5 +1,5 @@
-import ids from "../config/ids";
-import { EdgeVariant } from "../types/EdgeVariant";
+import ids from "../../config/ids";
+import { EdgeVariant } from "../../types/EdgeVariant";
 
 type Setter = (newEdgeVariant: EdgeVariant) => void;
 

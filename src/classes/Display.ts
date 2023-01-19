@@ -1,7 +1,7 @@
 import { Position } from "../types/Position";
 import Viewport from "./Viewport";
-import Graph from "./Graph";
-import Edge from "./Edge";
+import Graph from "./graph/Graph";
+import Edge from "./graph/Edge";
 import { CIRCLE_CONFIG } from "../config/circle";
 import { EDGE_CONFIG } from "../config/line";
 import drawLine from "../utils/drawLine";

@@ -1,10 +1,10 @@
-import { Position } from "../types/Position";
-import Viewport from "./Viewport";
-import Vertex from "./Vertex";
-import Graph from "./Graph";
-import { CIRCLE_CONFIG } from "../config/circle";
-import { EditMode } from "../types/EditMode";
-import { EdgeVariant } from "../types/EdgeVariant";
+import { Position } from "../../types/Position";
+import Viewport from "../Viewport";
+import Vertex from "../graph/Vertex";
+import Graph from "../graph/Graph";
+import { CIRCLE_CONFIG } from "../../config/circle";
+import { EditMode } from "../../types/EditMode";
+import { EdgeVariant } from "../../types/EdgeVariant";
 import EditModeController from "./EditModeController";
 import EdgeVariantController from "./EdgeVariantController";
 import ZoomController, { Zoom } from "./ZoomController";

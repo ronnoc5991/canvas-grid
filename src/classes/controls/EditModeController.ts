@@ -1,5 +1,5 @@
-import ids from "../config/ids";
-import { EditMode } from "../types/EditMode";
+import ids from "../../config/ids";
+import { EditMode } from "../../types/EditMode";
 
 type Setter = (newEditMode: EditMode) => void;
 

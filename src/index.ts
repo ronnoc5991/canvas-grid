@@ -1,6 +1,6 @@
 import Viewport from "./classes/Viewport";
-import Graph from "./classes/Graph";
-import Controls from "./classes/Controls";
+import Graph from "./classes/graph/Graph";
+import Controls from "./classes/controls/Controls";
 import Display from "./classes/Display";
 import ids from "./config/ids";
 import "./style.css";

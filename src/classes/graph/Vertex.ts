@@ -1,4 +1,4 @@
-import type { Position } from "../types/Position";
+import type { Position } from "../../types/Position";
 import Edge from "./Edge";
 
 export default class Vertex {

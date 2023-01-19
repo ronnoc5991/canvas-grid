@@ -1,4 +1,4 @@
-import ids from "../config/ids";
+import ids from "../../config/ids";
 
 export type Zoom =
   | { source: "wheel"; event: WheelEvent }
