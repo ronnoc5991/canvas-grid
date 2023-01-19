@@ -3,10 +3,11 @@ import Viewport from "./Viewport";
 import Vertex from "./Vertex";
 import Graph from "./Graph";
 import { CIRCLE_CONFIG } from "../config/circle";
-import ids from "../config/ids";
 import { EditMode } from "../types/EditMode";
 import { EdgeVariant } from "../types/EdgeVariant";
 import EditModeController from "./EditModeController";
+import EdgeVariantController from "./EdgeVariantController";
+import ZoomController, { Zoom } from "./ZoomController";
 
 // RESPONSIBILITIES:
 // - listen for user input, dispatch events accordingly
@@ -16,10 +17,6 @@ export default class Controls {
   private edgeVariant: EdgeVariant;
   private isDragging: boolean;
   private previousMousePosition: Position;
-  private bidirectionalRadioButton: HTMLElement;
-  private unidirectionalRadioButton: HTMLElement;
-  private zoomInButton: HTMLButtonElement;
-  private zoomOutButton: HTMLButtonElement;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -31,38 +28,16 @@ export default class Controls {
       this.editMode = newEditMode;
     });
     this.edgeVariant = "bidirectional";
+    new EdgeVariantController((newEdgeVariant) => {
+      this.edgeVariant = newEdgeVariant;
+    });
+    new ZoomController(canvas, this.onZoom.bind(this));
     this.isDragging = false;
     this.previousMousePosition = {
       x: 0,
       y: 0,
     };
-    this.unidirectionalRadioButton = document.getElementById(
-      ids.unidirectionalRadioButton
-    ) as HTMLElement;
-    this.bidirectionalRadioButton = document.getElementById(
-      ids.bidirectionalRadioButton
-    ) as HTMLElement;
-    this.zoomOutButton = document.getElementById(
-      ids.zoomOutButton
-    ) as HTMLButtonElement;
-    this.zoomInButton = document.getElementById(
-      ids.zoomInButton
-    ) as HTMLButtonElement;
-    this.bidirectionalRadioButton.addEventListener("click", () => {
-      this.edgeVariant = "bidirectional";
-    });
-    this.unidirectionalRadioButton.addEventListener("click", () => {
-      this.edgeVariant = "unidirectional";
-    });
-    this.canvas.addEventListener("wheel", (event) => {
-      this.viewport.onScroll(event);
-    });
-    this.zoomInButton.addEventListener("click", () => {
-      this.viewport.onZoomIn();
-    });
-    this.zoomOutButton.addEventListener("click", () => {
-      this.viewport.onZoomOut();
-    });
+
     this.canvas.addEventListener("mousedown", (event) => {
       this.onMouseDown(event);
     });
@@ -72,6 +47,22 @@ export default class Controls {
     this.canvas.addEventListener("mousemove", (event) => {
       this.onMouseMove(event);
     });
+  }
+
+  private onZoom(zoom: Zoom) {
+    switch (zoom.source) {
+      case "wheel":
+        this.viewport.onScroll(zoom.event);
+        break;
+      case "zoomIn":
+        this.viewport.onZoomIn();
+        break;
+      case "zoomOut":
+        this.viewport.onZoomOut();
+        break;
+      default:
+      // do nothing
+    }
   }
 
   private onMouseDown(event: MouseEvent) {

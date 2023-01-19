@@ -14,7 +14,6 @@ function onResize() {
 }
 
 window.addEventListener("resize", onResize);
-
 onResize();
 
 const viewport = new Viewport(canvas);
