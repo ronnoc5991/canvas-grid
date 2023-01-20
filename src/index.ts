@@ -21,3 +21,10 @@ function onResize() {
 
 window.addEventListener("resize", onResize);
 onResize();
+
+// move to simpler buttons
+// the button tells us how to interpret mouse clicks
+// plain mouse: dragging and selecting
+// node: node creation
+// bi: bidirectional edge
+// uni: unidirectional edge

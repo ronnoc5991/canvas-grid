@@ -9,6 +9,8 @@ import EditModeController from "./EditModeController";
 import EdgeVariantController from "./EdgeVariantController";
 import ZoomController, { Zoom } from "./ZoomController";
 import Edge from "../graph/Edge";
+import SelectedVertexDisplay from "../SelectedVertexDisplay";
+import SidePanel from "../sidePanel/SidePanel";
 
 // RESPONSIBILITIES:
 // - listen for user input, dispatch events accordingly
@@ -19,6 +21,8 @@ export default class Controls {
   private isDragging: boolean;
   private previousMousePosition: Position;
   private fromVertex: Vertex | null;
+
+  private sidePanel: SidePanel | null;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -40,6 +44,7 @@ export default class Controls {
       y: 0,
     };
     this.fromVertex = null;
+    this.sidePanel = null;
 
     this.canvas.addEventListener("mousedown", (event) => {
       this.onMouseDown(event);
@@ -74,7 +79,11 @@ export default class Controls {
         this.startDrag(event);
         break;
       case "vertex-creation":
-        this.createVertex(event);
+        const newVertex = this.createVertex(event);
+        const activeVertex = new SelectedVertexDisplay(newVertex, () => {
+          this.deleteVertex(newVertex);
+        });
+        this.populateSidePanel(activeVertex.rootElement);
         break;
       case "edge-creation":
         this.createEdge(event);
@@ -111,13 +120,27 @@ export default class Controls {
     this.viewport.onDrag(deltaX, deltaY);
   }
 
-  private createVertex({ clientX, clientY }: MouseEvent) {
+  private createVertex({ clientX, clientY }: MouseEvent): Vertex {
     const { x, y } = this.canvas.getBoundingClientRect();
-    const newVertex = new Vertex({
+    const newVertex = this.graph.createVertex({
       x: this.getGlobalXFromLocalX(clientX - x, this.viewport),
       y: this.getGlobalYFromLocalY(clientY - y, this.viewport),
     });
-    this.graph.addVertex(newVertex);
+    return newVertex;
+  }
+
+  private populateSidePanel(content: HTMLElement) {
+    if (!this.sidePanel) {
+      this.sidePanel = new SidePanel(content);
+    } else {
+      this.sidePanel.populate(content);
+    }
+  }
+
+  private deleteVertex(vertex: Vertex) {
+    this.graph.removeVertex(vertex);
+    this.sidePanel?.remove();
+    this.sidePanel = null;
   }
 
   private createEdge({ clientX, clientY }: MouseEvent) {
