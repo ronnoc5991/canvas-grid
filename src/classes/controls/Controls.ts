@@ -3,11 +3,9 @@ import Graph from "../graph/Graph";
 import Edge from "../graph/Edge";
 import Vertex from "../graph/Vertex";
 import MapWindow from "../MapWindow";
-import EditModeController from "./EditModeController";
-import EdgeVariantController from "./EdgeVariantController";
 import { CIRCLE_CONFIG } from "../../config/circle";
 import { EditMode } from "../../types/EditMode";
-import { EdgeVariant } from "../../types/EdgeVariant";
+import setupEditModeButtonListeners from "./setupEditModeButtonListeners";
 import ZoomController, { Zoom } from "./ZoomController";
 import SelectedVertexDisplay from "../SelectedVertexDisplay";
 import SidePanel from "../sidePanel/SidePanel";
@@ -17,7 +15,6 @@ import SidePanel from "../sidePanel/SidePanel";
 
 export default class Controls {
   private editMode: EditMode;
-  private edgeVariant: EdgeVariant;
   private isDragging: boolean;
   private previousMousePosition: Position;
   private fromVertex: Vertex | null;
@@ -29,13 +26,9 @@ export default class Controls {
     private graph: Graph,
     private mapWindow: MapWindow
   ) {
-    this.editMode = "exploration";
-    new EditModeController((newEditMode) => {
+    this.editMode = "navigation";
+    setupEditModeButtonListeners((newEditMode) => {
       this.editMode = newEditMode;
-    });
-    this.edgeVariant = "bidirectional";
-    new EdgeVariantController((newEdgeVariant) => {
-      this.edgeVariant = newEdgeVariant;
     });
     new ZoomController(canvas, this.onZoom.bind(this));
     this.isDragging = false;
@@ -75,7 +68,7 @@ export default class Controls {
 
   private onMouseDown(event: MouseEvent) {
     switch (this.editMode) {
-      case "exploration":
+      case "navigation":
         this.startDrag(event);
         break;
       case "vertex-creation":
@@ -85,7 +78,8 @@ export default class Controls {
         });
         this.populateSidePanel(activeVertex.rootElement);
         break;
-      case "edge-creation":
+      case "bidirectional-edge-creation":
+      case "unidirectional-edge-creation":
         this.createEdge(event);
         break;
       default:
@@ -98,7 +92,7 @@ export default class Controls {
   }
 
   private onMouseMove(event: MouseEvent) {
-    if (!this.isDragging || this.editMode !== "exploration") return;
+    if (!this.isDragging || this.editMode !== "navigation") return;
 
     this.onDrag(event);
   }
@@ -163,7 +157,8 @@ export default class Controls {
       ]);
       this.graph.addEdge(newEdge);
       this.fromVertex.addEdge(newEdge);
-      if (this.edgeVariant === "bidirectional") clickedVertex.addEdge(newEdge);
+      if (this.editMode === "bidirectional-edge-creation")
+        clickedVertex.addEdge(newEdge);
       this.fromVertex = null;
     }
   }

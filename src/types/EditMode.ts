@@ -1,1 +1,5 @@
-export type EditMode = "vertex-creation" | "edge-creation" | "exploration";
+export type EditMode =
+  | "navigation"
+  | "vertex-creation"
+  | "bidirectional-edge-creation"
+  | "unidirectional-edge-creation";
