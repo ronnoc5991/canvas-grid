@@ -3,7 +3,7 @@ import { EditMode } from "../../types/EditMode";
 
 type Setter = (newEditMode: EditMode) => void;
 
-export default function setupEditModeButtonListeners(setEditMode: Setter) {
+export default function setupEditModeListeners(setEditMode: Setter) {
   const navigationButton = document.getElementById(
     ids.navigationButton
   ) as HTMLButtonElement;

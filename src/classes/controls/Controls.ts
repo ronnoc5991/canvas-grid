@@ -5,10 +5,10 @@ import Vertex from "../graph/Vertex";
 import MapWindow from "../MapWindow";
 import { CIRCLE_CONFIG } from "../../config/circle";
 import { EditMode } from "../../types/EditMode";
-import setupEditModeButtonListeners from "./setupEditModeButtonListeners";
-import ZoomController, { Zoom } from "./ZoomController";
+import setupEditModeListeners from "./setupEditModeListeners";
 import SelectedVertexDisplay from "../SelectedVertexDisplay";
 import SidePanel from "../sidePanel/SidePanel";
+import setupZoomListeners, { ZoomEvent } from "./setupZoomListeners";
 
 // RESPONSIBILITIES:
 // - listen for user input, dispatch events accordingly
@@ -27,10 +27,10 @@ export default class Controls {
     private mapWindow: MapWindow
   ) {
     this.editMode = "navigation";
-    setupEditModeButtonListeners((newEditMode) => {
+    setupEditModeListeners((newEditMode) => {
       this.editMode = newEditMode;
     });
-    new ZoomController(canvas, this.onZoom.bind(this));
+    setupZoomListeners(canvas, this.onZoom.bind(this));
     this.isDragging = false;
     this.previousMousePosition = {
       x: 0,
@@ -50,10 +50,10 @@ export default class Controls {
     });
   }
 
-  private onZoom(zoom: Zoom) {
-    switch (zoom.source) {
+  private onZoom(zoomEvent: ZoomEvent) {
+    switch (zoomEvent.source) {
       case "wheel":
-        this.mapWindow.onScroll(zoom.event);
+        this.mapWindow.onScroll(zoomEvent.event);
         break;
       case "zoomIn":
         this.mapWindow.onZoomIn();
