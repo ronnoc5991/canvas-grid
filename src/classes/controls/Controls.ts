@@ -1,14 +1,14 @@
 import { Position } from "../../types/Position";
-import Viewport from "../Viewport";
-import Vertex from "../graph/Vertex";
 import Graph from "../graph/Graph";
+import Edge from "../graph/Edge";
+import Vertex from "../graph/Vertex";
+import MapWindow from "../MapWindow";
+import EditModeController from "./EditModeController";
+import EdgeVariantController from "./EdgeVariantController";
 import { CIRCLE_CONFIG } from "../../config/circle";
 import { EditMode } from "../../types/EditMode";
 import { EdgeVariant } from "../../types/EdgeVariant";
-import EditModeController from "./EditModeController";
-import EdgeVariantController from "./EdgeVariantController";
 import ZoomController, { Zoom } from "./ZoomController";
-import Edge from "../graph/Edge";
 import SelectedVertexDisplay from "../SelectedVertexDisplay";
 import SidePanel from "../sidePanel/SidePanel";
 
@@ -26,8 +26,8 @@ export default class Controls {
 
   constructor(
     private canvas: HTMLCanvasElement,
-    private viewport: Viewport,
-    private graph: Graph
+    private graph: Graph,
+    private mapWindow: MapWindow
   ) {
     this.editMode = "exploration";
     new EditModeController((newEditMode) => {
@@ -60,13 +60,13 @@ export default class Controls {
   private onZoom(zoom: Zoom) {
     switch (zoom.source) {
       case "wheel":
-        this.viewport.onScroll(zoom.event);
+        this.mapWindow.onScroll(zoom.event);
         break;
       case "zoomIn":
-        this.viewport.onZoomIn();
+        this.mapWindow.onZoomIn();
         break;
       case "zoomOut":
-        this.viewport.onZoomOut();
+        this.mapWindow.onZoomOut();
         break;
       default:
       // do nothing
@@ -117,14 +117,14 @@ export default class Controls {
     const deltaY = clientY - this.previousMousePosition.y;
 
     this.setPreviousMousePosition(clientX, clientY);
-    this.viewport.onDrag(deltaX, deltaY);
+    this.mapWindow.onDrag(deltaX, deltaY);
   }
 
   private createVertex({ clientX, clientY }: MouseEvent): Vertex {
     const { x, y } = this.canvas.getBoundingClientRect();
     const newVertex = this.graph.createVertex({
-      x: this.getGlobalXFromLocalX(clientX - x, this.viewport),
-      y: this.getGlobalYFromLocalY(clientY - y, this.viewport),
+      x: this.getGlobalXFromLocalX(clientX - x, this.mapWindow),
+      y: this.getGlobalYFromLocalY(clientY - y, this.mapWindow),
     });
     return newVertex;
   }
@@ -146,8 +146,8 @@ export default class Controls {
   private createEdge({ clientX, clientY }: MouseEvent) {
     const { x, y } = this.canvas.getBoundingClientRect();
     const clickedVertex = this.getClickedVertex({
-      x: this.getGlobalXFromLocalX(clientX - x, this.viewport),
-      y: this.getGlobalYFromLocalY(clientY - y, this.viewport),
+      x: this.getGlobalXFromLocalX(clientX - x, this.mapWindow),
+      y: this.getGlobalYFromLocalY(clientY - y, this.mapWindow),
     });
     if (clickedVertex === undefined) return;
     if (this.fromVertex === null) {
@@ -183,17 +183,17 @@ export default class Controls {
     });
   }
 
-  private getGlobalXFromLocalX(xValue: number, viewport: Viewport): number {
+  private getGlobalXFromLocalX(xValue: number, mapWindow: MapWindow): number {
     return (
-      viewport.minX +
-      (viewport.maxX - viewport.minX) * (xValue / this.canvas.width)
+      mapWindow.minX +
+      (mapWindow.maxX - mapWindow.minX) * (xValue / this.canvas.width)
     );
   }
 
-  private getGlobalYFromLocalY(yValue: number, viewport: Viewport): number {
+  private getGlobalYFromLocalY(yValue: number, mapWindow: MapWindow): number {
     return (
-      viewport.minY +
-      (viewport.maxY - viewport.minY) * (yValue / this.canvas.height)
+      mapWindow.minY +
+      (mapWindow.maxY - mapWindow.minY) * (yValue / this.canvas.height)
     );
   }
 
