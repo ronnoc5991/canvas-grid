@@ -10,6 +10,8 @@ import SelectedVertexDisplay from "../SelectedVertexDisplay";
 import SidePanel from "../sidePanel/SidePanel";
 import setupZoomListeners, { ZoomEvent } from "./setupZoomListeners";
 
+const DEFAULT_EDIT_MODE: EditMode = "navigation";
+
 // RESPONSIBILITIES:
 // - listen for user input, dispatch events accordingly
 
@@ -26,7 +28,7 @@ export default class Controls {
     private graph: Graph,
     private mapWindow: MapWindow
   ) {
-    this.editMode = "navigation";
+    this.editMode = DEFAULT_EDIT_MODE;
     setupEditModeListeners((newEditMode) => {
       this.editMode = newEditMode;
     });
