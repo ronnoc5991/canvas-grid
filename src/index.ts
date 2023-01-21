@@ -10,8 +10,8 @@ const canvas = document.getElementById(ids.canvas) as HTMLCanvasElement;
 
 const graph = new Graph();
 const mapWindow = new MapWindow(canvas);
-const viewport = new Viewport(canvas, graph, mapWindow);
 new Controls(canvas, graph, mapWindow);
+new Viewport(canvas, graph, mapWindow);
 
 function onResize() {
   canvas.width = container?.offsetWidth ?? 0;
@@ -21,10 +21,3 @@ function onResize() {
 
 window.addEventListener("resize", onResize);
 onResize();
-
-// move to simpler buttons
-// the button tells us how to interpret mouse clicks
-// plain mouse: dragging and selecting
-// node: node creation
-// bi: bidirectional edge
-// uni: unidirectional edge
