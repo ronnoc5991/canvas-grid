@@ -6,8 +6,6 @@ import MapWindow from "../MapWindow";
 import { CIRCLE_CONFIG } from "../../config/circle";
 import { EditMode } from "../../types/EditMode";
 import setupEditModeListeners from "./setupEditModeListeners";
-import SelectedVertexDisplay from "../SelectedVertexDisplay";
-import SidePanel from "../sidePanel/SidePanel";
 import setupZoomListeners, { ZoomEvent } from "./setupZoomListeners";
 
 const DEFAULT_EDIT_MODE: EditMode = "navigation";
@@ -20,8 +18,6 @@ export default class Controls {
   private isDragging: boolean;
   private previousMousePosition: Position;
   private fromVertex: Vertex | null;
-
-  private sidePanel: SidePanel | null;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -39,7 +35,7 @@ export default class Controls {
       y: 0,
     };
     this.fromVertex = null;
-    this.sidePanel = null;
+    // this.sidePanel = null;
 
     this.canvas.addEventListener("mousedown", (event) => {
       this.onMouseDown(event);
@@ -74,11 +70,7 @@ export default class Controls {
         this.startDrag(event);
         break;
       case "vertex-creation":
-        const newVertex = this.createVertex(event);
-        const activeVertex = new SelectedVertexDisplay(newVertex, () => {
-          this.deleteVertex(newVertex);
-        });
-        this.populateSidePanel(activeVertex.rootElement);
+        this.createVertex(event);
         break;
       case "bidirectional-edge-creation":
       case "unidirectional-edge-creation":
@@ -125,19 +117,9 @@ export default class Controls {
     return newVertex;
   }
 
-  private populateSidePanel(content: HTMLElement) {
-    if (!this.sidePanel) {
-      this.sidePanel = new SidePanel(content);
-    } else {
-      this.sidePanel.populate(content);
-    }
-  }
-
-  private deleteVertex(vertex: Vertex) {
-    this.graph.removeVertex(vertex);
-    this.sidePanel?.remove();
-    this.sidePanel = null;
-  }
+  // private deleteVertex(vertex: Vertex) {
+  //   this.graph.removeVertex(vertex);
+  // }
 
   private createEdge({ clientX, clientY }: MouseEvent) {
     const { x, y } = this.canvas.getBoundingClientRect();
