@@ -9,12 +9,14 @@ import setupEditModeListeners from "./setupEditModeListeners";
 import setupZoomListeners, { ZoomEvent } from "./setupZoomListeners";
 
 const DEFAULT_EDIT_MODE: EditMode = "navigation";
+const DRAGGING_THRESHOLD: number = 5;
 
 // RESPONSIBILITIES:
 // - listen for user input, dispatch events accordingly
 
 export default class Controls {
   private editMode: EditMode;
+  private isMouseDown: boolean;
   private isDragging: boolean;
   private previousMousePosition: Position;
   private fromVertex: Vertex | null;
@@ -25,18 +27,21 @@ export default class Controls {
     private mapWindow: MapWindow
   ) {
     this.editMode = DEFAULT_EDIT_MODE;
-    setupEditModeListeners((newEditMode) => {
-      this.editMode = newEditMode;
-    });
-    setupZoomListeners(canvas, this.onZoom.bind(this));
+    this.isMouseDown = false;
     this.isDragging = false;
     this.previousMousePosition = {
       x: 0,
       y: 0,
     };
     this.fromVertex = null;
-    // this.sidePanel = null;
+    this.initializeEventListeners();
+  }
 
+  private initializeEventListeners() {
+    setupEditModeListeners((newEditMode) => {
+      this.editMode = newEditMode;
+    });
+    setupZoomListeners(this.canvas, this.onZoom.bind(this));
     this.canvas.addEventListener("mousedown", (event) => {
       this.onMouseDown(event);
     });
@@ -67,7 +72,8 @@ export default class Controls {
   private onMouseDown(event: MouseEvent) {
     switch (this.editMode) {
       case "navigation":
-        this.startDrag(event);
+        this.setPreviousMousePosition(event.clientX, event.clientY);
+        this.isMouseDown = true;
         break;
       case "vertex-creation":
         this.createVertex(event);
@@ -82,22 +88,28 @@ export default class Controls {
   }
 
   private onMouseUp() {
-    this.stopDrag();
+    this.isMouseDown = false;
+    this.isDragging = false;
   }
 
   private onMouseMove(event: MouseEvent) {
-    if (!this.isDragging || this.editMode !== "navigation") return;
-
-    this.onDrag(event);
+    if (this.editMode !== "navigation" || !this.isMouseDown) return;
+    if (this.isDragging) {
+      this.onDrag(event);
+      return;
+    }
+    const hasStartedDragging = this.hasStartedDragging(event);
+    if (hasStartedDragging) {
+      this.setPreviousMousePosition(event.clientX, event.clientY);
+      this.isDragging = true;
+    }
   }
 
-  private startDrag({ clientX, clientY }: MouseEvent) {
-    this.isDragging = true;
-    this.setPreviousMousePosition(clientX, clientY);
-  }
-
-  private stopDrag() {
-    this.isDragging = false;
+  private hasStartedDragging({ clientX, clientY }: MouseEvent): boolean {
+    return (
+      Math.abs(clientX - this.previousMousePosition.x) > DRAGGING_THRESHOLD ||
+      Math.abs(clientY - this.previousMousePosition.y) > DRAGGING_THRESHOLD
+    );
   }
 
   private onDrag({ clientX, clientY }: MouseEvent) {
