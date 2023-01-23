@@ -143,18 +143,7 @@ export default class Controls {
     if (this.fromVertex === null) {
       this.fromVertex = clickedVertex;
     } else {
-      const euclideanDistance = Math.sqrt(
-        Math.pow(this.fromVertex.position.x - clickedVertex.position.x, 2) +
-          Math.pow(this.fromVertex.position.y - clickedVertex.position.y, 2)
-      );
-      const newEdge = new Edge(euclideanDistance, [
-        this.fromVertex,
-        clickedVertex,
-      ]);
-      this.graph.addEdge(newEdge);
-      this.fromVertex.addEdge(newEdge);
-      if (this.editMode === "bidirectional-edge-creation")
-        clickedVertex.addEdge(newEdge);
+      this.graph.createEdge(this.fromVertex, clickedVertex);
       this.fromVertex = null;
     }
   }

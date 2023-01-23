@@ -35,9 +35,17 @@ export default class Graph {
     return newVertex;
   }
 
-  public addEdge(edge: Edge) {
-    // TODO: Guard against multiple edges between the same two vertices? Could this result in a loop of sorts?
-    this.edges.push(edge);
+  public createEdge(fromVertex: Vertex, toVertex: Vertex) {
+    const euclideanDistance = Math.sqrt(
+      Math.pow(fromVertex.position.x - toVertex.position.x, 2) +
+        Math.pow(fromVertex.position.y - toVertex.position.y, 2)
+    );
+
+    const newEdge = new Edge(euclideanDistance, [fromVertex, toVertex]);
+    fromVertex.addEdge(newEdge);
+    toVertex.addEdge(newEdge);
+
+    this.edges.push(newEdge);
     this.publish();
   }
 
