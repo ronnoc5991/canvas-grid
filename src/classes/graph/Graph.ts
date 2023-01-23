@@ -36,23 +36,24 @@ export default class Graph {
   }
 
   public createEdge(fromVertex: Vertex, toVertex: Vertex) {
-    const euclideanDistance = Math.sqrt(
-      Math.pow(fromVertex.position.x - toVertex.position.x, 2) +
-        Math.pow(fromVertex.position.y - toVertex.position.y, 2)
-    );
+    // we create a bidirectional edge by default
+    // might need to change the 'from' 'to' language here...
+    const fromEdge = new Edge(fromVertex, toVertex);
+    const toEdge = new Edge(toVertex, fromVertex);
 
-    const newEdge = new Edge(euclideanDistance, [fromVertex, toVertex]);
-    fromVertex.addEdge(newEdge);
-    toVertex.addEdge(newEdge);
+    fromVertex.addEdge(fromEdge);
+    toVertex.addEdge(toEdge);
 
-    this.edges.push(newEdge);
+    this.edges.push(fromEdge);
+    this.edges.push(toEdge);
     this.publish();
   }
 
   public removeVertex(vertexToDelete: Vertex) {
     this.vertices = this.vertices.filter((vertex) => vertex !== vertexToDelete);
     this.edges = this.edges.filter(
-      (edge) => !edge.vertices.includes(vertexToDelete)
+      (edge) =>
+        edge.fromVertex !== vertexToDelete && edge.toVertex !== vertexToDelete
     );
     this.publish();
   }

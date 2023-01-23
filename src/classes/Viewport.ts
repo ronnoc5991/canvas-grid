@@ -67,23 +67,17 @@ export default class Viewport {
       if (!this.isEdgeVisible(edge, this.mapWindow)) return;
       const fromPosition: Position = {
         x: this.getLocalXFromGlobalX(
-          edge.vertices[0].position.x,
+          edge.fromVertex.position.x,
           this.mapWindow
         ),
         y: this.getLocalYFromGlobalY(
-          edge.vertices[0].position.y,
+          edge.fromVertex.position.y,
           this.mapWindow
         ),
       };
       const toPosition: Position = {
-        x: this.getLocalXFromGlobalX(
-          edge.vertices[1].position.x,
-          this.mapWindow
-        ),
-        y: this.getLocalYFromGlobalY(
-          edge.vertices[1].position.y,
-          this.mapWindow
-        ),
+        x: this.getLocalXFromGlobalX(edge.toVertex.position.x, this.mapWindow),
+        y: this.getLocalYFromGlobalY(edge.toVertex.position.y, this.mapWindow),
       };
       drawLine(fromPosition, toPosition, this.context, EDGE_CONFIG);
     });
@@ -143,16 +137,16 @@ export default class Viewport {
   }
 
   // TODO: we need to see if any of the "box" that surrounds the edge is visible?
-  private isEdgeVisible({ vertices }: Edge, mapWindow: MapWindow) {
+  private isEdgeVisible({ fromVertex, toVertex }: Edge, mapWindow: MapWindow) {
     return (
-      (vertices[0].position.x > mapWindow.minX &&
-        vertices[0].position.x < mapWindow.maxX &&
-        vertices[0].position.y > mapWindow.minY &&
-        vertices[0].position.y < mapWindow.maxY) ||
-      (vertices[1].position.x > mapWindow.minX &&
-        vertices[1].position.x < mapWindow.maxX &&
-        vertices[1].position.y > mapWindow.minY &&
-        vertices[1].position.y < mapWindow.maxY)
+      (fromVertex.position.x > mapWindow.minX &&
+        fromVertex.position.x < mapWindow.maxX &&
+        fromVertex.position.y > mapWindow.minY &&
+        fromVertex.position.y < mapWindow.maxY) ||
+      (toVertex.position.x > mapWindow.minX &&
+        toVertex.position.x < mapWindow.maxX &&
+        toVertex.position.y > mapWindow.minY &&
+        toVertex.position.y < mapWindow.maxY)
     );
   }
 
