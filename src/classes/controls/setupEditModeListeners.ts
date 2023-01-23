@@ -10,11 +10,8 @@ export default function setupEditModeListeners(setEditMode: Setter) {
   const vertexCreationButton = document.getElementById(
     ids.vertexCreationButton
   ) as HTMLButtonElement;
-  const unidirectionalEdgeButton = document.getElementById(
-    ids.unidirectionalEdgeButton
-  ) as HTMLButtonElement;
-  const bidirectionalEdgeButton = document.getElementById(
-    ids.bidirectionalEdgeButton
+  const edgeCreationButton = document.getElementById(
+    ids.edgeCreationButton
   ) as HTMLButtonElement;
 
   navigationButton.addEventListener("click", () => {
@@ -23,10 +20,7 @@ export default function setupEditModeListeners(setEditMode: Setter) {
   vertexCreationButton?.addEventListener("click", () => {
     setEditMode("vertex-creation");
   });
-  bidirectionalEdgeButton.addEventListener("click", () => {
-    setEditMode("bidirectional-edge-creation");
-  });
-  unidirectionalEdgeButton.addEventListener("click", () => {
-    setEditMode("unidirectional-edge-creation");
+  edgeCreationButton.addEventListener("click", () => {
+    setEditMode("edge-creation");
   });
 }

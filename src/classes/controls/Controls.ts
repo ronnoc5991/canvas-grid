@@ -91,8 +91,7 @@ export default class Controls {
       case "vertex-creation":
         this.createVertex(event);
         break;
-      case "bidirectional-edge-creation":
-      case "unidirectional-edge-creation":
+      case "edge-creation":
         this.createEdge(event);
         break;
       default:
