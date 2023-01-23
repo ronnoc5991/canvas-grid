@@ -1,12 +1,14 @@
 import { Position } from "../../types/Position";
 import Graph from "../graph/Graph";
-import Edge from "../graph/Edge";
 import Vertex from "../graph/Vertex";
 import MapWindow from "../MapWindow";
 import { CIRCLE_CONFIG } from "../../config/circle";
 import { EditMode } from "../../types/EditMode";
 import setupEditModeListeners from "./setupEditModeListeners";
 import setupZoomListeners, { ZoomEvent } from "./setupZoomListeners";
+import setupMouseEventListeners, {
+  CustomMouseEvent,
+} from "./setupMouseEventListeners";
 
 const DEFAULT_EDIT_MODE: EditMode = "navigation";
 const DRAGGING_THRESHOLD: number = 5;
@@ -20,6 +22,9 @@ export default class Controls {
   private isDragging: boolean;
   private previousMousePosition: Position;
   private fromVertex: Vertex | null;
+
+  // if we click the directions button, we can put the selected Vertex into the startingVertex position
+  // private startingVertex: Vertex | null;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -41,19 +46,27 @@ export default class Controls {
     setupEditModeListeners((newEditMode) => {
       this.editMode = newEditMode;
     });
-    setupZoomListeners(this.canvas, this.onZoom.bind(this));
-    this.canvas.addEventListener("mousedown", (event) => {
-      this.onMouseDown(event);
-    });
-    this.canvas.addEventListener("mouseup", () => {
-      this.onMouseUp();
-    });
-    this.canvas.addEventListener("mousemove", (event) => {
-      this.onMouseMove(event);
-    });
+    setupZoomListeners(this.canvas, this.onZoomEvent.bind(this));
+    setupMouseEventListeners(this.canvas, this.onMouseEvent.bind(this));
   }
 
-  private onZoom(zoomEvent: ZoomEvent) {
+  private onMouseEvent({ source, event }: CustomMouseEvent) {
+    switch (source) {
+      case "mousedown":
+        this.onMouseDown(event);
+        break;
+      case "mousemove":
+        this.onMouseMove(event);
+        break;
+      case "mouseup":
+        this.onMouseUp(event);
+        break;
+      default:
+      // do nothing
+    }
+  }
+
+  private onZoomEvent(zoomEvent: ZoomEvent) {
     switch (zoomEvent.source) {
       case "wheel":
         this.mapWindow.onScroll(zoomEvent.event);
@@ -87,7 +100,19 @@ export default class Controls {
     }
   }
 
-  private onMouseUp() {
+  private onMouseUp({ clientX, clientY }: MouseEvent) {
+    if (this.editMode === "navigation" && !this.isDragging) {
+      const { x, y } = this.canvas.getBoundingClientRect();
+
+      const clickedVertex = this.getClickedVertex({
+        x: this.getMapWindowXFromViewportX(clientX - x),
+        y: this.getMapWindowYFromViewportY(clientY - y),
+      });
+
+      console.log(clickedVertex);
+      // we will want to populate the side panel with this vertex
+    }
+
     this.isMouseDown = false;
     this.isDragging = false;
   }
@@ -123,8 +148,8 @@ export default class Controls {
   private createVertex({ clientX, clientY }: MouseEvent): Vertex {
     const { x, y } = this.canvas.getBoundingClientRect();
     const newVertex = this.graph.createVertex({
-      x: this.getGlobalXFromLocalX(clientX - x, this.mapWindow),
-      y: this.getGlobalYFromLocalY(clientY - y, this.mapWindow),
+      x: this.getMapWindowXFromViewportX(clientX - x),
+      y: this.getMapWindowYFromViewportY(clientY - y),
     });
     return newVertex;
   }
@@ -136,8 +161,8 @@ export default class Controls {
   private createEdge({ clientX, clientY }: MouseEvent) {
     const { x, y } = this.canvas.getBoundingClientRect();
     const clickedVertex = this.getClickedVertex({
-      x: this.getGlobalXFromLocalX(clientX - x, this.mapWindow),
-      y: this.getGlobalYFromLocalY(clientY - y, this.mapWindow),
+      x: this.getMapWindowXFromViewportX(clientX - x),
+      y: this.getMapWindowYFromViewportY(clientY - y),
     });
     if (clickedVertex === undefined) return;
     if (this.fromVertex === null) {
@@ -163,17 +188,18 @@ export default class Controls {
     });
   }
 
-  private getGlobalXFromLocalX(xValue: number, mapWindow: MapWindow): number {
+  private getMapWindowXFromViewportX(xValue: number) {
     return (
-      mapWindow.minX +
-      (mapWindow.maxX - mapWindow.minX) * (xValue / this.canvas.width)
+      this.mapWindow.minX +
+      (this.mapWindow.maxX - this.mapWindow.minX) * (xValue / this.canvas.width)
     );
   }
 
-  private getGlobalYFromLocalY(yValue: number, mapWindow: MapWindow): number {
+  private getMapWindowYFromViewportY(yValue: number): number {
     return (
-      mapWindow.minY +
-      (mapWindow.maxY - mapWindow.minY) * (yValue / this.canvas.height)
+      this.mapWindow.minY +
+      (this.mapWindow.maxY - this.mapWindow.minY) *
+        (yValue / this.canvas.height)
     );
   }
 

@@ -8,7 +8,7 @@ type ZoomEventDispatcher = (zoomEvent: ZoomEvent) => void;
 
 export default function setupZoomListeners(
   canvas: HTMLCanvasElement,
-  dispatchZoomEvent: ZoomEventDispatcher
+  onZoomEvent: ZoomEventDispatcher
 ) {
   const zoomOutButton = document.getElementById(
     ids.zoomOutButton
@@ -17,12 +17,12 @@ export default function setupZoomListeners(
     ids.zoomInButton
   ) as HTMLButtonElement;
   canvas.addEventListener("wheel", (event) => {
-    dispatchZoomEvent({ source: "wheel", event });
+    onZoomEvent({ source: "wheel", event });
   });
   zoomInButton.addEventListener("click", () => {
-    dispatchZoomEvent({ source: "zoomIn" });
+    onZoomEvent({ source: "zoomIn" });
   });
   zoomOutButton.addEventListener("click", () => {
-    dispatchZoomEvent({ source: "zoomOut" });
+    onZoomEvent({ source: "zoomOut" });
   });
 }
