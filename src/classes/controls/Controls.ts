@@ -9,6 +9,8 @@ import setupZoomListeners, { ZoomEvent } from "./setupZoomListeners";
 import setupMouseEventListeners, {
   CustomMouseEvent,
 } from "./setupMouseEventListeners";
+import SelectedVertexDisplay from "../SelectedVertexDisplay";
+import SidePanel from "../sidePanel/SidePanel";
 
 const DEFAULT_EDIT_MODE: EditMode = "navigation";
 const DRAGGING_THRESHOLD: number = 5;
@@ -29,7 +31,8 @@ export default class Controls {
   constructor(
     private canvas: HTMLCanvasElement,
     private graph: Graph,
-    private mapWindow: MapWindow
+    private mapWindow: MapWindow,
+    private sidePanel: SidePanel
   ) {
     this.editMode = DEFAULT_EDIT_MODE;
     this.isMouseDown = false;
@@ -108,8 +111,15 @@ export default class Controls {
         y: this.getMapWindowYFromViewportY(clientY - y),
       });
 
-      console.log(clickedVertex);
-      // we will want to populate the side panel with this vertex
+      if (!clickedVertex) return;
+
+      const newContent = new SelectedVertexDisplay(clickedVertex, () => {
+        this.deleteVertex(clickedVertex);
+        this.sidePanel.close();
+      });
+      // pass in a valid on close
+      // this onclose should 'clear out' any state we dont want here
+      this.sidePanel.updateContent(newContent.rootElement, () => {});
     }
 
     this.isMouseDown = false;
@@ -153,9 +163,9 @@ export default class Controls {
     return newVertex;
   }
 
-  // private deleteVertex(vertex: Vertex) {
-  //   this.graph.removeVertex(vertex);
-  // }
+  private deleteVertex(vertex: Vertex) {
+    this.graph.removeVertex(vertex);
+  }
 
   private createEdge({ clientX, clientY }: MouseEvent) {
     const { x, y } = this.canvas.getBoundingClientRect();

@@ -7,9 +7,7 @@ import Button from "./ui/Button";
 // onDelete
 // could also display edges that leave from here?
 
-// selected Vertex display?
-// pass in a vertex
-// create DOM to be appended to sidePanel
+// contains:
 // editable name
 // delete function
 

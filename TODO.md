@@ -1,6 +1,5 @@
 TODO: Finish functionality:
 
-- connect nodes with edges
 - select a node as a start node
 - select a node as an end node
 - pass those nodes, along with the rest of the nodes to a path finding algorithm (A\*)
@@ -15,3 +14,5 @@ TODO: Finish functionality:
   TODO: Make the edges bezier curves, allow user to edit them
   TODO: allow for changing the circle config (radius)
   TODO: Create a scrollToOrigin function
+
+TODO: Should only be two edit buttons: Vertex and Edge Creation... should go back to navigation whenever we do something
