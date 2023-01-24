@@ -1,7 +1,7 @@
 import { Path } from "../types/Path";
-import getEuclideanDistanceBetweenPoints from "../utils/getEuclideanDistanceBetweenPoints";
 import Graph from "./graph/Graph";
 import Vertex from "./graph/Vertex";
+import getEuclideanDistanceBetweenPoints from "../utils/getEuclideanDistanceBetweenPoints";
 
 export default class PathPlanner {
   public rootElement: HTMLElement;

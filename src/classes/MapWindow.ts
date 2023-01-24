@@ -3,8 +3,8 @@
 // - update subscribers on changes
 
 const DEFAULT_ZOOM_PERCENTAGE: number = 100;
-const MAX_ZOOM_PERCENTAGE: number = 200;
-const MIN_ZOOM_PERCENTAGE: number = 50;
+const MAX_ZOOM_PERCENTAGE: number = 300;
+const MIN_ZOOM_PERCENTAGE: number = 25;
 const ZOOM_STEP_SIZE: number = 10;
 
 type Subscriber = (mapWindow: MapWindow) => void;
