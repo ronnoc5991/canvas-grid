@@ -9,7 +9,7 @@ import drawCircle from "../utils/drawCircle";
 import { DEFAULT_BLOCK_SIZE } from "../config/constants";
 
 // RESPONSIBILITES:
-// - Draw what is inside of the current viewport
+// - Draw what is inside of the current mapWindow
 
 export default class Viewport {
   private context: CanvasRenderingContext2D;
@@ -44,7 +44,7 @@ export default class Viewport {
     );
 
     xValues.forEach((value) => {
-      const xValue = this.getLocalXFromGlobalX(value, this.mapWindow);
+      const xValue = this.getViewportXFromMapWindowX(value, this.mapWindow);
       drawLine(
         { x: xValue, y: 0 },
         { x: xValue, y: this.canvas.height },
@@ -53,7 +53,7 @@ export default class Viewport {
     });
 
     yValues.forEach((value) => {
-      const yValue = this.getLocalYFromGlobalY(value, this.mapWindow);
+      const yValue = this.getViewportYFromMapWindowY(value, this.mapWindow);
       drawLine(
         { x: 0, y: yValue },
         { x: this.canvas.width, y: yValue },
@@ -66,18 +66,24 @@ export default class Viewport {
     this.graph.edges.forEach((edge) => {
       if (!this.isEdgeVisible(edge, this.mapWindow)) return;
       const fromPosition: Position = {
-        x: this.getLocalXFromGlobalX(
+        x: this.getViewportXFromMapWindowX(
           edge.fromVertex.position.x,
           this.mapWindow
         ),
-        y: this.getLocalYFromGlobalY(
+        y: this.getViewportYFromMapWindowY(
           edge.fromVertex.position.y,
           this.mapWindow
         ),
       };
       const toPosition: Position = {
-        x: this.getLocalXFromGlobalX(edge.toVertex.position.x, this.mapWindow),
-        y: this.getLocalYFromGlobalY(edge.toVertex.position.y, this.mapWindow),
+        x: this.getViewportXFromMapWindowX(
+          edge.toVertex.position.x,
+          this.mapWindow
+        ),
+        y: this.getViewportYFromMapWindowY(
+          edge.toVertex.position.y,
+          this.mapWindow
+        ),
       };
       drawLine(fromPosition, toPosition, this.context, EDGE_CONFIG);
     });
@@ -89,8 +95,8 @@ export default class Viewport {
         return;
       drawCircle(
         {
-          x: this.getLocalXFromGlobalX(position.x, this.mapWindow),
-          y: this.getLocalYFromGlobalY(position.y, this.mapWindow),
+          x: this.getViewportXFromMapWindowX(position.x, this.mapWindow),
+          y: this.getViewportYFromMapWindowY(position.y, this.mapWindow),
         },
         CIRCLE_CONFIG,
         this.context
@@ -98,13 +104,19 @@ export default class Viewport {
     });
   }
 
-  private getLocalXFromGlobalX(xValue: number, mapWindow: MapWindow): number {
+  private getViewportXFromMapWindowX(
+    xValue: number,
+    mapWindow: MapWindow
+  ): number {
     return (
       this.canvas.width *
       ((xValue - mapWindow.minX) / (mapWindow.maxX - mapWindow.minX))
     );
   }
-  private getLocalYFromGlobalY(yValue: number, mapWindow: MapWindow): number {
+  private getViewportYFromMapWindowY(
+    yValue: number,
+    mapWindow: MapWindow
+  ): number {
     return (
       this.canvas.height *
       ((yValue - mapWindow.minY) / (mapWindow.maxY - mapWindow.minY))

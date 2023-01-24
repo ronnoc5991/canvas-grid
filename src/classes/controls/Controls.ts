@@ -44,6 +44,7 @@ export default class Controls {
       this.pathPlanner = new PathPlanner(this.graph);
       this.sidePanel.updateContent(this.pathPlanner.rootElement, () => {
         this.pathPlanner = null;
+        // need to remove event listenders from pathPlanner things?
       });
     });
   }
@@ -131,7 +132,7 @@ export default class Controls {
   }
 
   private displaySelectedVertex(selectedVertex: Vertex) {
-    const newContent = new SelectedVertexDisplay(
+    const selectedVertexDisplay = new SelectedVertexDisplay(
       selectedVertex,
       () => {
         this.deleteVertex(selectedVertex);
@@ -143,12 +144,13 @@ export default class Controls {
         this.pathPlanner.onVertexSelection(selectedVertex);
         this.sidePanel.updateContent(this.pathPlanner.rootElement, () => {
           this.pathPlanner = null;
+          // need to remove event listeners from path planner things
         });
       }
     );
 
-    this.sidePanel.updateContent(newContent.rootElement, () => {
-      // this onclose should 'clear out' any state we dont want here
+    this.sidePanel.updateContent(selectedVertexDisplay.rootElement, () => {
+      selectedVertexDisplay.dispose();
     });
   }
 
