@@ -7,6 +7,7 @@ export default class PathPlanner {
   public rootElement: HTMLElement;
   private startInput: HTMLInputElement;
   private endInput: HTMLInputElement;
+  private pathContainer: HTMLElement;
   private start: Vertex | null = null;
   private end: Vertex | null = null;
   private path: Path = [];
@@ -16,8 +17,10 @@ export default class PathPlanner {
     this.rootElement.classList.add("path-planner");
     this.startInput = this.createVertexInput("start");
     this.endInput = this.createVertexInput("end");
+    this.pathContainer = document.createElement("div");
     this.rootElement.appendChild(this.startInput);
     this.rootElement.appendChild(this.endInput);
+    this.rootElement.appendChild(this.pathContainer);
   }
 
   public onVertexSelection(selectedVertex: Vertex) {
@@ -31,8 +34,35 @@ export default class PathPlanner {
 
     if (this.shouldPlanPath()) {
       this.path = this.getPath();
-      console.log(this.path);
+
+      if (
+        this.path[0] === this.start &&
+        this.path[this.path.length - 1] === this.end
+      ) {
+        this.displayPath();
+      } else {
+        console.log("no path found :(");
+      }
     }
+  }
+
+  private clearPathContainer() {
+    while (this.pathContainer.firstElementChild) {
+      this.pathContainer.removeChild(this.pathContainer.firstElementChild);
+    }
+  }
+
+  private displayPath() {
+    this.clearPathContainer();
+    this.path.forEach((step) => {
+      const container = document.createElement("div");
+      container.classList.add("step-container");
+      const title = document.createElement("p");
+      title.classList.add("step-title");
+      title.innerText = step.name;
+      container.appendChild(title);
+      this.pathContainer.appendChild(container);
+    });
   }
 
   private shouldPlanPath() {
