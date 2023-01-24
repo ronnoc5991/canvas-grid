@@ -1,6 +1,6 @@
 import Graph from "./classes/graph/Graph";
 import MapWindow from "./classes/MapWindow";
-import Viewport from "./classes/Viewport";
+import Viewport from "./classes/viewport/Viewport";
 import Controls from "./classes/controls/Controls";
 import SidePanel from "./classes/sidePanel/SidePanel";
 import ids from "./config/ids";

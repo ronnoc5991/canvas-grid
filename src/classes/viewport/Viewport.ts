@@ -1,15 +1,13 @@
-import { Position } from "../types/Position";
-import Graph from "./graph/Graph";
-import Edge from "./graph/Edge";
-import MapWindow from "./MapWindow";
-import { CIRCLE_CONFIG } from "../config/circle";
-import { EDGE_CONFIG } from "../config/line";
-import drawLine from "../utils/drawLine";
-import drawCircle from "../utils/drawCircle";
-import { DEFAULT_BLOCK_SIZE } from "../config/constants";
+import { Position } from "../../types/Position";
+import MapWindow from "../MapWindow";
+import Graph from "../graph/Graph";
+import Edge from "../graph/Edge";
+import config, { LineConfig } from "./config";
 
 // RESPONSIBILITES:
 // - Draw what is inside of the current mapWindow
+
+const DEFAULT_BLOCK_SIZE: number = 25;
 
 export default class Viewport {
   private context: CanvasRenderingContext2D;
@@ -45,19 +43,19 @@ export default class Viewport {
 
     xValues.forEach((value) => {
       const xValue = this.getViewportXFromMapWindowX(value, this.mapWindow);
-      drawLine(
+      this.drawLine(
         { x: xValue, y: 0 },
         { x: xValue, y: this.canvas.height },
-        this.context
+        config.grid
       );
     });
 
     yValues.forEach((value) => {
       const yValue = this.getViewportYFromMapWindowY(value, this.mapWindow);
-      drawLine(
+      this.drawLine(
         { x: 0, y: yValue },
         { x: this.canvas.width, y: yValue },
-        this.context
+        config.grid
       );
     });
   }
@@ -85,23 +83,54 @@ export default class Viewport {
           this.mapWindow
         ),
       };
-      drawLine(fromPosition, toPosition, this.context, EDGE_CONFIG);
+      this.drawLine(fromPosition, toPosition, config.edge);
     });
   }
 
+  private drawLine(from: Position, to: Position, config: LineConfig) {
+    this.context.save();
+    this.context.lineWidth = config.width;
+    this.context.strokeStyle = config.color;
+    this.context.beginPath();
+    this.context.translate(0.5, 0.5); // weird hack to make lines less blurry
+    this.context.moveTo(from.x, from.y);
+    this.context.lineTo(to.x, to.y);
+    this.context.stroke();
+    this.context.restore();
+  }
+
   private drawVertices() {
+    const scaledVertexRadius = this.scaleWidth(config.vertex.radius);
     this.graph.vertices.forEach(({ position }) => {
-      if (!this.isVertexVisible(position, CIRCLE_CONFIG.radius, this.mapWindow))
+      if (!this.isVertexVisible(position, config.vertex.radius, this.mapWindow))
         return;
-      drawCircle(
+      this.drawVertex(
         {
           x: this.getViewportXFromMapWindowX(position.x, this.mapWindow),
           y: this.getViewportYFromMapWindowY(position.y, this.mapWindow),
         },
-        CIRCLE_CONFIG,
-        this.context
+        scaledVertexRadius
       );
     });
+  }
+
+  private drawVertex({ x, y }: Position, radius: number) {
+    this.context.beginPath();
+    this.context.arc(x, y, radius, 0, 2 * Math.PI);
+    this.context.save();
+    this.context.strokeStyle = config.vertex.stroke.color;
+    this.context.lineWidth = config.vertex.stroke.width;
+    this.context.fillStyle = config.vertex.fill;
+    this.context.translate(0.5, 0.5);
+    this.context.fill();
+    this.context.stroke();
+    this.context.restore();
+  }
+
+  private scaleWidth(width: number) {
+    return (
+      width / ((this.mapWindow.maxX - this.mapWindow.minX) / this.canvas.width)
+    );
   }
 
   private getViewportXFromMapWindowX(

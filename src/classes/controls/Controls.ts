@@ -5,7 +5,6 @@ import MapWindow from "../MapWindow";
 import PathPlanner from "../PathPlanner";
 import SidePanel from "../sidePanel/SidePanel";
 import SelectedVertexDisplay from "../SelectedVertexDisplay";
-import { CIRCLE_CONFIG } from "../../config/circle";
 import { EditMode } from "../../types/EditMode";
 import setupEditModeListeners from "./setupEditModeListeners";
 import setupZoomListeners, { ZoomEvent } from "./setupZoomListeners";
@@ -13,6 +12,7 @@ import setupMouseEventListeners, {
   CustomMouseEvent,
 } from "./setupMouseEventListeners";
 import ids from "../../config/ids";
+import viewportConfig from "../viewport/config";
 
 const DEFAULT_EDIT_MODE: EditMode = "navigation";
 const DRAGGING_THRESHOLD: number = 5;
@@ -212,10 +212,10 @@ export default class Controls {
 
   private getClickedVertex(clickedPosition: Position): Vertex | undefined {
     return this.graph.vertices.find(({ position }) => {
-      const leftEdge = position.x - CIRCLE_CONFIG.radius;
-      const rightEdge = position.x + CIRCLE_CONFIG.radius;
-      const topEdge = position.y - CIRCLE_CONFIG.radius;
-      const bottomEdge = position.y + CIRCLE_CONFIG.radius;
+      const leftEdge = position.x - viewportConfig.vertex.radius;
+      const rightEdge = position.x + viewportConfig.vertex.radius;
+      const topEdge = position.y - viewportConfig.vertex.radius;
+      const bottomEdge = position.y + viewportConfig.vertex.radius;
       return (
         clickedPosition.x >= leftEdge &&
         clickedPosition.x <= rightEdge &&

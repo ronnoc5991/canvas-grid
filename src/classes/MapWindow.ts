@@ -1,13 +1,11 @@
-import {
-  DEFAULT_ZOOM_PERCENTAGE,
-  MAX_ZOOM_PERCENTAGE,
-  MIN_ZOOM_PERCENTAGE,
-  ZOOM_STEP_SIZE,
-} from "../config/constants";
-
 // RESPONSIBILITIES:
 // - store the current window to the map
 // - update subscribers on changes
+
+const DEFAULT_ZOOM_PERCENTAGE: number = 100;
+const MAX_ZOOM_PERCENTAGE: number = 200;
+const MIN_ZOOM_PERCENTAGE: number = 50;
+const ZOOM_STEP_SIZE: number = 10;
 
 type Subscriber = (mapWindow: MapWindow) => void;
 
@@ -54,11 +52,20 @@ export default class MapWindow {
     this.onZoom();
   }
 
+  public getScaledValue(value: number) {
+    const divisor = this.zoomPercentage / DEFAULT_ZOOM_PERCENTAGE;
+    return value / divisor;
+  }
+
   public onDrag(deltaX: number, deltaY: number) {
-    const { scaledDeltaX, scaledDeltaY } = this.scaleDrag(deltaX, deltaY);
+    // const { scaledDeltaX, scaledDeltaY } = this.scaleDrag(deltaX, deltaY);
+    const scaledDeltaX = this.getScaledValue(deltaX);
+    const scaledDeltaY = this.getScaledValue(deltaY);
     this.update(-scaledDeltaX, -scaledDeltaX, -scaledDeltaY, -scaledDeltaY);
   }
 
+  // COULD THIS FUNCTION LIVE IN A TRANSLATOR CLASS?
+  // IT COULD KNOW ABOUT THE MAPWINDOW AND THE VIEWPORT? AND TRANSLATE THINGS BACK AND FORTH
   private scaleDrag(
     deltaX: number,
     deltaY: number
