@@ -2,6 +2,9 @@ import { Position } from "../../types/Position";
 import Graph from "../graph/Graph";
 import Vertex from "../graph/Vertex";
 import MapWindow from "../MapWindow";
+import PathPlanner from "../PathPlanner";
+import SidePanel from "../sidePanel/SidePanel";
+import SelectedVertexDisplay from "../SelectedVertexDisplay";
 import { CIRCLE_CONFIG } from "../../config/circle";
 import { EditMode } from "../../types/EditMode";
 import setupEditModeListeners from "./setupEditModeListeners";
@@ -9,8 +12,7 @@ import setupZoomListeners, { ZoomEvent } from "./setupZoomListeners";
 import setupMouseEventListeners, {
   CustomMouseEvent,
 } from "./setupMouseEventListeners";
-import SelectedVertexDisplay from "../SelectedVertexDisplay";
-import SidePanel from "../sidePanel/SidePanel";
+import ids from "../../config/ids";
 
 const DEFAULT_EDIT_MODE: EditMode = "navigation";
 const DRAGGING_THRESHOLD: number = 5;
@@ -19,14 +21,12 @@ const DRAGGING_THRESHOLD: number = 5;
 // - listen for user input, dispatch events accordingly
 
 export default class Controls {
-  private editMode: EditMode;
-  private isMouseDown: boolean;
-  private isDragging: boolean;
-  private previousMousePosition: Position;
-  private fromVertex: Vertex | null;
-
-  // if we click the directions button, we can put the selected Vertex into the startingVertex position
-  // private startingVertex: Vertex | null;
+  private editMode: EditMode = DEFAULT_EDIT_MODE;
+  private isMouseDown: boolean = false;
+  private isDragging: boolean = false;
+  private previousMousePosition: Position = { x: 0, y: 0 };
+  private fromVertex: Vertex | null = null;
+  private pathPlanner: PathPlanner | null = null;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -34,15 +34,18 @@ export default class Controls {
     private mapWindow: MapWindow,
     private sidePanel: SidePanel
   ) {
-    this.editMode = DEFAULT_EDIT_MODE;
-    this.isMouseDown = false;
-    this.isDragging = false;
-    this.previousMousePosition = {
-      x: 0,
-      y: 0,
-    };
-    this.fromVertex = null;
     this.initializeEventListeners();
+
+    const pathPlanningButton = document.getElementById(
+      ids.pathPlanningButton
+    ) as HTMLButtonElement;
+    pathPlanningButton.addEventListener("click", () => {
+      this.editMode = "path-planning";
+      this.pathPlanner = new PathPlanner(this.graph);
+      this.sidePanel.updateContent(this.pathPlanner.rootElement, () => {
+        this.pathPlanner = null;
+      });
+    });
   }
 
   private initializeEventListeners() {
@@ -103,7 +106,10 @@ export default class Controls {
   }
 
   private onMouseUp({ clientX, clientY }: MouseEvent) {
-    if (this.editMode === "navigation" && !this.isDragging) {
+    if (
+      (this.editMode === "navigation" || this.editMode === "path-planning") &&
+      !this.isDragging
+    ) {
       const { x, y } = this.canvas.getBoundingClientRect();
 
       const clickedVertex = this.getClickedVertex({
@@ -113,17 +119,37 @@ export default class Controls {
 
       if (!clickedVertex) return;
 
-      const newContent = new SelectedVertexDisplay(clickedVertex, () => {
-        this.deleteVertex(clickedVertex);
-        this.sidePanel.close();
-      });
-      // pass in a valid on close
-      // this onclose should 'clear out' any state we dont want here
-      this.sidePanel.updateContent(newContent.rootElement, () => {});
+      if (this.editMode === "navigation")
+        this.displaySelectedVertex(clickedVertex);
+
+      if (this.editMode === "path-planning")
+        this.pathPlanner?.onVertexSelection(clickedVertex);
     }
 
     this.isMouseDown = false;
     this.isDragging = false;
+  }
+
+  private displaySelectedVertex(selectedVertex: Vertex) {
+    const newContent = new SelectedVertexDisplay(
+      selectedVertex,
+      () => {
+        this.deleteVertex(selectedVertex);
+        this.sidePanel.close();
+      },
+      () => {
+        this.editMode = "path-planning";
+        this.pathPlanner = new PathPlanner(this.graph);
+        this.pathPlanner.onVertexSelection(selectedVertex);
+        this.sidePanel.updateContent(this.pathPlanner.rootElement, () => {
+          this.pathPlanner = null;
+        });
+      }
+    );
+
+    this.sidePanel.updateContent(newContent.rootElement, () => {
+      // this onclose should 'clear out' any state we dont want here
+    });
   }
 
   private onMouseMove(event: MouseEvent) {

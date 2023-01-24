@@ -1,1 +1,5 @@
-export type EditMode = "navigation" | "vertex-creation" | "edge-creation";
+export type EditMode =
+  | "navigation"
+  | "vertex-creation"
+  | "edge-creation"
+  | "path-planning";
