@@ -7,7 +7,6 @@ import SidePanel from "../sidePanel/SidePanel";
 import SelectedVertexDisplay from "../SelectedVertexDisplay";
 import { EditMode } from "../../types/EditMode";
 import setupEditModeListeners from "./setupEditModeListeners";
-import setupZoomListeners, { ZoomEvent } from "./setupZoomListeners";
 import setupMouseEventListeners, {
   CustomMouseEvent,
 } from "./setupMouseEventListeners";
@@ -53,7 +52,6 @@ export default class Controls {
     setupEditModeListeners((newEditMode) => {
       this.editMode = newEditMode;
     });
-    setupZoomListeners(this.canvas, this.onZoomEvent.bind(this));
     setupMouseEventListeners(this.canvas, this.onMouseEvent.bind(this));
   }
 
@@ -67,22 +65,6 @@ export default class Controls {
         break;
       case "mouseup":
         this.onMouseUp(event);
-        break;
-      default:
-      // do nothing
-    }
-  }
-
-  private onZoomEvent(zoomEvent: ZoomEvent) {
-    switch (zoomEvent.source) {
-      case "wheel":
-        this.mapWindow.onScroll(zoomEvent.event);
-        break;
-      case "zoomIn":
-        this.mapWindow.onZoomIn();
-        break;
-      case "zoomOut":
-        this.mapWindow.onZoomOut();
         break;
       default:
       // do nothing

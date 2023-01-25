@@ -2,6 +2,8 @@
 // - store the current window to the map
 // - update subscribers on changes
 
+import ids from "../config/ids";
+
 const DEFAULT_ZOOM_PERCENTAGE: number = 100;
 const MAX_ZOOM_PERCENTAGE: number = 300;
 const MIN_ZOOM_PERCENTAGE: number = 25;
@@ -10,15 +12,30 @@ const ZOOM_STEP_SIZE: number = 10;
 type Subscriber = (mapWindow: MapWindow) => void;
 
 export default class MapWindow {
+  private zoomOutButton = document.getElementById(
+    ids.zoomOutButton
+  ) as HTMLButtonElement;
+  private zoomInButton = document.getElementById(
+    ids.zoomInButton
+  ) as HTMLButtonElement;
   private subscribers: Array<Subscriber> = [];
-  private zoomPercentage: number;
+  private zoomPercentage: number = DEFAULT_ZOOM_PERCENTAGE;
   public minX: number;
   public maxX: number;
   public minY: number;
   public maxY: number;
 
   constructor(private canvas: HTMLCanvasElement) {
-    this.zoomPercentage = DEFAULT_ZOOM_PERCENTAGE;
+    canvas.addEventListener("wheel", (event) => {
+      this.onScroll(event);
+    });
+    this.zoomInButton.addEventListener("click", () => {
+      this.onZoomIn();
+    });
+    this.zoomOutButton.addEventListener("click", () => {
+      this.onZoomOut();
+    });
+
     this.minX = 0;
     this.maxX = this.canvas.width;
     this.minY = 0;
