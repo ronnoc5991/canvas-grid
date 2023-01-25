@@ -7,3 +7,6 @@ TODO: allow for changing the circle config (radius)
 TODO: Create a function that will zoom out/in to the appropriate level so you can see the entire map?
 TODO: Should only be two edit buttons: Vertex and Edge Creation... should go back to navigation whenever we do something
 TODO: Create real maps of existing city metro systems and include them in the app?
+TODO: Create a mouseFollower that displays the coordinates?
+TODO: draw fewer grid lines when we are zoomed out?
+TODO: allow for toggling on/off the grid lines?

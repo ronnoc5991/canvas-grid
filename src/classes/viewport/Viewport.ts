@@ -2,7 +2,8 @@ import { Position } from "../../types/Position";
 import MapWindow from "../MapWindow";
 import Graph from "../graph/Graph";
 import Edge from "../graph/Edge";
-import config, { LineConfig } from "./config";
+import config from "./config";
+import drawLine from "../../utils/drawLine";
 
 // RESPONSIBILITES:
 // - Draw what is inside of the current mapWindow
@@ -30,6 +31,7 @@ export default class Viewport {
   }
 
   private drawGrid() {
+    const gridLines: Array<{ from: Position; to: Position }> = [];
     const xValues: Array<number> = this.getLineValues(
       Math.round(this.mapWindow.minX),
       Math.round(this.mapWindow.maxX),
@@ -42,61 +44,96 @@ export default class Viewport {
     );
 
     xValues.forEach((value) => {
-      const xValue = this.getViewportXFromMapWindowX(value, this.mapWindow);
-      this.drawLine(
-        { x: xValue, y: 0 },
-        { x: xValue, y: this.canvas.height },
-        config.grid
-      );
+      const xValue = this.getViewportXFromMapWindowX(value);
+
+      gridLines.push({
+        from: { x: xValue, y: 0 },
+        to: { x: xValue, y: this.canvas.height },
+      });
     });
 
     yValues.forEach((value) => {
-      const yValue = this.getViewportYFromMapWindowY(value, this.mapWindow);
-      this.drawLine(
-        { x: 0, y: yValue },
-        { x: this.canvas.width, y: yValue },
-        config.grid
-      );
+      const yValue = this.getViewportYFromMapWindowY(value);
+
+      gridLines.push({
+        from: { x: 0, y: yValue },
+        to: { x: this.canvas.width, y: yValue },
+      });
     });
+
+    this.context.save();
+    this.context.lineWidth = config.grid.width;
+    this.context.strokeStyle = config.grid.color;
+
+    gridLines.forEach((line) => {
+      drawLine(line.from, line.to, this.context);
+    });
+
+    this.context.restore();
   }
 
   private drawEdges() {
     this.graph.edges.forEach((edge) => {
       if (!this.isEdgeVisible(edge, this.mapWindow)) return;
-      const fromPosition: Position = {
-        x: this.getViewportXFromMapWindowX(
-          edge.fromVertex.position.x,
-          this.mapWindow
-        ),
-        y: this.getViewportYFromMapWindowY(
-          edge.fromVertex.position.y,
-          this.mapWindow
-        ),
-      };
-      const toPosition: Position = {
-        x: this.getViewportXFromMapWindowX(
-          edge.toVertex.position.x,
-          this.mapWindow
-        ),
-        y: this.getViewportYFromMapWindowY(
-          edge.toVertex.position.y,
-          this.mapWindow
-        ),
-      };
-      this.drawLine(fromPosition, toPosition, config.edge);
+      this.drawEdge(edge);
     });
   }
 
-  private drawLine(from: Position, to: Position, config: LineConfig) {
+  private drawEdge(edge: Edge) {
+    const fromPosition = this.getViewportPositionFromMapWindowPosition(
+      edge.fromVertex.position
+    );
+    const toPosition = this.getViewportPositionFromMapWindowPosition(
+      edge.toVertex.position
+    );
+    this.drawBezierCurve(
+      fromPosition,
+      this.getViewportPositionFromMapWindowPosition(edge.controlPointOne),
+      this.getViewportPositionFromMapWindowPosition(edge.controlPointTwo),
+      toPosition
+    );
+
+    if (edge.isBeingEdited) {
+      this.drawEdgeControlPoint(
+        this.getViewportPositionFromMapWindowPosition(edge.controlPointOne),
+        fromPosition
+      );
+      this.drawEdgeControlPoint(
+        this.getViewportPositionFromMapWindowPosition(edge.controlPointTwo),
+        toPosition
+      );
+    }
+  }
+
+  private drawEdgeControlPoint(
+    controlPoint: Position,
+    connectedPoint: Position
+  ) {
     this.context.save();
-    this.context.lineWidth = config.width;
-    this.context.strokeStyle = config.color;
-    this.context.beginPath();
-    this.context.translate(0.5, 0.5); // weird hack to make lines less blurry
-    this.context.moveTo(from.x, from.y);
-    this.context.lineTo(to.x, to.y);
-    this.context.stroke();
+    this.context.lineWidth = config.edge.width;
+    this.context.strokeStyle = config.edge.color;
+    drawLine(controlPoint, connectedPoint, this.context);
+    this.drawVertex(controlPoint, 4);
     this.context.restore();
+  }
+
+  private drawBezierCurve(
+    start: Position,
+    controlPointOne: Position,
+    controlPointTwo: Position,
+    end: Position
+  ) {
+    this.context.beginPath();
+    this.context.moveTo(start.x, start.y);
+    this.context.bezierCurveTo(
+      controlPointOne.x,
+      controlPointOne.y,
+      controlPointTwo.x,
+      controlPointTwo.y,
+      end.x,
+      end.y
+    );
+    this.context.stroke();
   }
 
   private drawVertices() {
@@ -106,8 +143,8 @@ export default class Viewport {
         return;
       this.drawVertex(
         {
-          x: this.getViewportXFromMapWindowX(position.x, this.mapWindow),
-          y: this.getViewportYFromMapWindowY(position.y, this.mapWindow),
+          x: this.getViewportXFromMapWindowX(position.x),
+          y: this.getViewportYFromMapWindowY(position.y),
         },
         scaledVertexRadius
       );
@@ -133,22 +170,25 @@ export default class Viewport {
     );
   }
 
-  private getViewportXFromMapWindowX(
-    xValue: number,
-    mapWindow: MapWindow
-  ): number {
+  private getViewportPositionFromMapWindowPosition({ x, y }: Position) {
+    return {
+      x: this.getViewportXFromMapWindowX(x),
+      y: this.getViewportYFromMapWindowY(y),
+    };
+  }
+
+  private getViewportXFromMapWindowX(xValue: number): number {
     return (
       this.canvas.width *
-      ((xValue - mapWindow.minX) / (mapWindow.maxX - mapWindow.minX))
+      ((xValue - this.mapWindow.minX) /
+        (this.mapWindow.maxX - this.mapWindow.minX))
     );
   }
-  private getViewportYFromMapWindowY(
-    yValue: number,
-    mapWindow: MapWindow
-  ): number {
+  private getViewportYFromMapWindowY(yValue: number): number {
     return (
       this.canvas.height *
-      ((yValue - mapWindow.minY) / (mapWindow.maxY - mapWindow.minY))
+      ((yValue - this.mapWindow.minY) /
+        (this.mapWindow.maxY - this.mapWindow.minY))
     );
   }
 
@@ -178,6 +218,7 @@ export default class Viewport {
   }
 
   // TODO: we need to see if any of the "box" that surrounds the edge is visible?
+  // does the edge contain an x in the y range or a y in the x range?
   private isEdgeVisible({ fromVertex, toVertex }: Edge, mapWindow: MapWindow) {
     return (
       (fromVertex.position.x > mapWindow.minX &&
