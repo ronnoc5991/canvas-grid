@@ -10,7 +10,6 @@ import setupEditModeListeners from "./setupEditModeListeners";
 import setupMouseEventListeners, {
   CustomMouseEvent,
 } from "./setupMouseEventListeners";
-import ids from "../../config/ids";
 import viewportConfig from "../viewport/config";
 
 const DEFAULT_EDIT_MODE: EditMode = "navigation";
@@ -36,7 +35,7 @@ export default class Controls {
     this.initializeEventListeners();
 
     const pathPlanningButton = document.getElementById(
-      ids.pathPlanningButton
+      "path-planning-button"
     ) as HTMLButtonElement;
     pathPlanningButton.addEventListener("click", () => {
       this.editMode = "path-planning";

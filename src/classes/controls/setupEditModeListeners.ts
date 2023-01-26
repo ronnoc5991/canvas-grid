@@ -1,17 +1,16 @@
-import ids from "../../config/ids";
 import { EditMode } from "../../types/EditMode";
 
 type Setter = (newEditMode: EditMode) => void;
 
 export default function setupEditModeListeners(setEditMode: Setter) {
   const navigationButton = document.getElementById(
-    ids.navigationButton
+    "navigation-button"
   ) as HTMLButtonElement;
   const vertexCreationButton = document.getElementById(
-    ids.vertexCreationButton
+    "vertex-creation-button"
   ) as HTMLButtonElement;
   const edgeCreationButton = document.getElementById(
-    ids.edgeCreationButton
+    "edge-creation-button"
   ) as HTMLButtonElement;
 
   navigationButton.addEventListener("click", () => {

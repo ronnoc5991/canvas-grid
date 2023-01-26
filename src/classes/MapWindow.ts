@@ -2,8 +2,6 @@
 // - store the current window to the map
 // - update subscribers on changes
 
-import ids from "../config/ids";
-
 const DEFAULT_ZOOM_PERCENTAGE: number = 100;
 const MAX_ZOOM_PERCENTAGE: number = 300;
 const MIN_ZOOM_PERCENTAGE: number = 25;
@@ -13,10 +11,10 @@ type Subscriber = (mapWindow: MapWindow) => void;
 
 export default class MapWindow {
   private zoomOutButton = document.getElementById(
-    ids.zoomOutButton
+    "zoom-out-button"
   ) as HTMLButtonElement;
   private zoomInButton = document.getElementById(
-    ids.zoomInButton
+    "zoom-in-button"
   ) as HTMLButtonElement;
   private subscribers: Array<Subscriber> = [];
   private zoomPercentage: number = DEFAULT_ZOOM_PERCENTAGE;

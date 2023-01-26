@@ -3,11 +3,10 @@ import MapWindow from "./classes/MapWindow";
 import Viewport from "./classes/viewport/Viewport";
 import Controls from "./classes/controls/Controls";
 import SidePanel from "./classes/sidePanel/SidePanel";
-import ids from "./config/ids";
 import "./style.css";
 
-const container = document.getElementById(ids.container);
-const canvas = document.getElementById(ids.canvas) as HTMLCanvasElement;
+const container = document.getElementById("canvas-container");
+const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
 const graph = new Graph();
 const mapWindow = new MapWindow(canvas);
