@@ -72,41 +72,46 @@ export default class Controls {
   }
 
   private onMouseDown(event: MouseEvent) {
-    switch (this.editMode) {
-      case "navigation":
-        this.setPreviousMousePosition(event.clientX, event.clientY);
-        this.isMouseDown = true;
-        break;
-      case "vertex-creation":
-        this.createVertex(event);
-        break;
-      case "edge-creation":
-        this.createEdge(event);
-        break;
-      default:
-      // do nothing
+    this.isMouseDown = true;
+    this.setPreviousMousePosition(event.clientX, event.clientY);
+  }
+
+  private onMouseMove(event: MouseEvent) {
+    if (!this.isMouseDown) return;
+    if (this.isDragging) {
+      this.onDrag(event);
+      return;
+    }
+    if (this.hasStartedDragging(event)) {
+      this.setPreviousMousePosition(event.clientX, event.clientY);
+      this.isDragging = true;
     }
   }
 
   private onMouseUp({ clientX, clientY }: MouseEvent) {
-    if (
-      (this.editMode === "navigation" || this.editMode === "path-planning") &&
-      !this.isDragging
+    const { x, y } = this.canvas.getBoundingClientRect();
+    const clickedPosition: Position = {
+      x: this.getMapWindowXFromViewportX(clientX - x),
+      y: this.getMapWindowYFromViewportY(clientY - y),
+    };
+    const clickedVertex = this.getClickedVertex(clickedPosition);
+
+    if (this.editMode === "vertex-creation") {
+      this.createVertex(clickedPosition);
+    } else if (this.editMode === "edge-creation" && !!clickedVertex) {
+      this.createEdge(clickedVertex);
+    } else if (
+      this.editMode === "navigation" &&
+      !this.isDragging &&
+      !!clickedVertex
     ) {
-      const { x, y } = this.canvas.getBoundingClientRect();
-
-      const clickedVertex = this.getClickedVertex({
-        x: this.getMapWindowXFromViewportX(clientX - x),
-        y: this.getMapWindowYFromViewportY(clientY - y),
-      });
-
-      if (!clickedVertex) return;
-
-      if (this.editMode === "navigation")
-        this.displaySelectedVertex(clickedVertex);
-
-      if (this.editMode === "path-planning")
-        this.pathPlanner?.onVertexSelection(clickedVertex);
+      this.displaySelectedVertex(clickedVertex);
+    } else if (
+      this.editMode === "path-planning" &&
+      !this.isDragging &&
+      !!clickedVertex
+    ) {
+      this.pathPlanner?.onVertexSelection(clickedVertex);
     }
 
     this.isMouseDown = false;
@@ -136,19 +141,6 @@ export default class Controls {
     });
   }
 
-  private onMouseMove(event: MouseEvent) {
-    if (this.editMode !== "navigation" || !this.isMouseDown) return;
-    if (this.isDragging) {
-      this.onDrag(event);
-      return;
-    }
-    const hasStartedDragging = this.hasStartedDragging(event);
-    if (hasStartedDragging) {
-      this.setPreviousMousePosition(event.clientX, event.clientY);
-      this.isDragging = true;
-    }
-  }
-
   private hasStartedDragging({ clientX, clientY }: MouseEvent): boolean {
     return (
       Math.abs(clientX - this.previousMousePosition.x) > DRAGGING_THRESHOLD ||
@@ -164,12 +156,8 @@ export default class Controls {
     this.mapWindow.onDrag(deltaX, deltaY);
   }
 
-  private createVertex({ clientX, clientY }: MouseEvent): Vertex {
-    const { x, y } = this.canvas.getBoundingClientRect();
-    const newVertex = this.graph.createVertex({
-      x: this.getMapWindowXFromViewportX(clientX - x),
-      y: this.getMapWindowYFromViewportY(clientY - y),
-    });
+  private createVertex(position: Position): Vertex {
+    const newVertex = this.graph.createVertex(position);
     return newVertex;
   }
 
@@ -177,13 +165,8 @@ export default class Controls {
     this.graph.removeVertex(vertex);
   }
 
-  private createEdge({ clientX, clientY }: MouseEvent) {
-    const { x, y } = this.canvas.getBoundingClientRect();
-    const clickedVertex = this.getClickedVertex({
-      x: this.getMapWindowXFromViewportX(clientX - x),
-      y: this.getMapWindowYFromViewportY(clientY - y),
-    });
-    if (clickedVertex === undefined) return;
+  // create an edgeCreation class?
+  private createEdge(clickedVertex: Vertex) {
     if (this.fromVertex === null) {
       this.fromVertex = clickedVertex;
     } else {
