@@ -121,7 +121,7 @@ export default class Controls {
     const selectedVertexDisplay = new SelectedVertexDisplay(
       selectedVertex,
       () => {
-        this.deleteVertex(selectedVertex);
+        this.graph.removeVertex(selectedVertex);
         this.sidePanel.close();
       },
       () => {
@@ -158,10 +158,6 @@ export default class Controls {
   private createVertex(position: Position): Vertex {
     const newVertex = this.graph.createVertex(position);
     return newVertex;
-  }
-
-  private deleteVertex(vertex: Vertex) {
-    this.graph.removeVertex(vertex);
   }
 
   // create an edgeCreation class?
