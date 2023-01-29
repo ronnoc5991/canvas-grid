@@ -1,9 +1,7 @@
 import Vertex from "./graph/Vertex";
 import Button from "./ui/Button";
 
-// TODO: add styles for this content
-
-export default class SelectedVertexDisplay {
+export default class VertexEditor {
   public rootElement: HTMLElement;
   private nameInput: HTMLInputElement;
   private deleteButton: Button;
@@ -23,8 +21,8 @@ export default class SelectedVertexDisplay {
     );
     this.planAPathButton = new Button("plan-a-path-button", this.onPlanAPath);
     this.rootElement.appendChild(this.nameInput);
-    this.rootElement.appendChild(this.deleteButton.element);
-    this.rootElement.appendChild(this.planAPathButton.element);
+    this.rootElement.appendChild(this.deleteButton.rootElement);
+    this.rootElement.appendChild(this.planAPathButton.rootElement);
   }
 
   private createNameInput(): HTMLInputElement {

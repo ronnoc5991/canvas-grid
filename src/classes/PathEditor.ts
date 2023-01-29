@@ -3,7 +3,7 @@ import Graph from "./graph/Graph";
 import Vertex from "./graph/Vertex";
 import getEuclideanDistanceBetweenPoints from "../utils/getEuclideanDistanceBetweenPoints";
 
-export default class PathPlanner {
+export default class PathEditor {
   public rootElement: HTMLElement;
   private startInput: HTMLInputElement;
   private endInput: HTMLInputElement;

@@ -1,8 +1,8 @@
 export default class Button {
-  public element: HTMLButtonElement;
+  public rootElement: HTMLButtonElement;
 
   constructor(className: string, private onClick: (event: Event) => void) {
-    this.element = this.initialize(className);
+    this.rootElement = this.initialize(className);
   }
 
   private initialize(className: string): HTMLButtonElement {
@@ -13,6 +13,6 @@ export default class Button {
   }
 
   public dispose() {
-    this.element.removeEventListener("click", this.onClick);
+    this.rootElement.removeEventListener("click", this.onClick);
   }
 }
