@@ -35,25 +35,20 @@ export default class Graph {
     return newVertex;
   }
 
-  public createEdge(fromVertex: Vertex, toVertex: Vertex) {
-    // we create a bidirectional edge by default
-    // might need to change the 'from' 'to' language here...
-    const fromEdge = new Edge(fromVertex, toVertex);
-    const toEdge = new Edge(toVertex, fromVertex);
+  public createEdge(vertexOne: Vertex, vertexTwo: Vertex) {
+    const edge = new Edge([vertexOne, vertexTwo]);
 
-    fromVertex.addEdge(fromEdge);
-    toVertex.addEdge(toEdge);
+    vertexOne.addEdge(edge);
+    vertexTwo.addEdge(edge);
 
-    this.edges.push(fromEdge);
-    this.edges.push(toEdge);
+    this.edges.push(edge);
     this.publish();
   }
 
   public removeVertex(vertexToDelete: Vertex) {
     this.vertices = this.vertices.filter((vertex) => vertex !== vertexToDelete);
     this.edges = this.edges.filter(
-      (edge) =>
-        edge.fromVertex !== vertexToDelete && edge.toVertex !== vertexToDelete
+      (edge) => !edge.vertices.includes(vertexToDelete)
     );
     this.publish();
   }

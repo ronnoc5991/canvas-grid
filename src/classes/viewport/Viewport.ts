@@ -81,10 +81,10 @@ export default class Viewport {
 
   private drawEdge(edge: Edge) {
     const fromPosition = this.getViewportPositionFromMapWindowPosition(
-      edge.fromVertex.position
+      edge.vertices[0].position
     );
     const toPosition = this.getViewportPositionFromMapWindowPosition(
-      edge.toVertex.position
+      edge.vertices[1].position
     );
     this.drawBezierCurve(
       fromPosition,
@@ -219,16 +219,16 @@ export default class Viewport {
 
   // TODO: we need to see if any of the "box" that surrounds the edge is visible?
   // does the edge contain an x in the y range or a y in the x range?
-  private isEdgeVisible({ fromVertex, toVertex }: Edge, mapWindow: MapWindow) {
+  private isEdgeVisible({ vertices }: Edge, mapWindow: MapWindow) {
     return (
-      (fromVertex.position.x > mapWindow.minX &&
-        fromVertex.position.x < mapWindow.maxX &&
-        fromVertex.position.y > mapWindow.minY &&
-        fromVertex.position.y < mapWindow.maxY) ||
-      (toVertex.position.x > mapWindow.minX &&
-        toVertex.position.x < mapWindow.maxX &&
-        toVertex.position.y > mapWindow.minY &&
-        toVertex.position.y < mapWindow.maxY)
+      (vertices[0].position.x > mapWindow.minX &&
+        vertices[0].position.x < mapWindow.maxX &&
+        vertices[0].position.y > mapWindow.minY &&
+        vertices[0].position.y < mapWindow.maxY) ||
+      (vertices[1].position.x > mapWindow.minX &&
+        vertices[1].position.x < mapWindow.maxX &&
+        vertices[1].position.y > mapWindow.minY &&
+        vertices[1].position.y < mapWindow.maxY)
     );
   }
 
