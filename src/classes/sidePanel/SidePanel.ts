@@ -7,9 +7,9 @@ const CLOSE_BUTTON_ID = "close-button";
 const CONTENT_CONTAINER_ID = "content-container";
 
 export default class SidePanel {
-  private isOpen: boolean;
-  private onContentClose: (() => void) | null;
-  private root: HTMLElement = document.getElementById(
+  private isOpen: boolean = false;
+  private onContentClose: (() => void) | null = null;
+  private rootElement: HTMLElement = document.getElementById(
     ROOT_ELEMENT_ID
   ) as HTMLElement;
   private closeButton: HTMLButtonElement = document.getElementById(
@@ -20,9 +20,7 @@ export default class SidePanel {
   ) as HTMLElement;
 
   constructor() {
-    this.isOpen = false;
-    this.onContentClose = null;
-    this.root.addEventListener("transitionend", () => {
+    this.rootElement.addEventListener("transitionend", () => {
       this.onTransitionEnd();
     });
 
@@ -40,7 +38,7 @@ export default class SidePanel {
 
   private populateContentContainer(content: HTMLElement) {
     this.contentContainer.appendChild(content);
-    this.root.classList.add(HAS_CONTENT_CLASSNAME);
+    this.rootElement.classList.add(HAS_CONTENT_CLASSNAME);
   }
 
   private emptyContentContainer() {
@@ -49,16 +47,16 @@ export default class SidePanel {
         this.contentContainer.firstElementChild
       );
     }
-    this.root.classList.remove(HAS_CONTENT_CLASSNAME);
+    this.rootElement.classList.remove(HAS_CONTENT_CLASSNAME);
   }
 
   private open() {
-    this.root.classList.add(IS_OPEN_CLASSNAME);
+    this.rootElement.classList.add(IS_OPEN_CLASSNAME);
     this.isOpen = true;
   }
 
   public close() {
-    this.root.classList.remove(IS_OPEN_CLASSNAME);
+    this.rootElement.classList.remove(IS_OPEN_CLASSNAME);
     this.isOpen = false;
   }
 

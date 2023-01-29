@@ -37,10 +37,8 @@ export default class Graph {
 
   public createEdge(vertexOne: Vertex, vertexTwo: Vertex) {
     const edge = new Edge([vertexOne, vertexTwo]);
-
     vertexOne.addEdge(edge);
     vertexTwo.addEdge(edge);
-
     this.edges.push(edge);
     this.publish();
   }
