@@ -1,7 +1,8 @@
+import Editor from "../types/Editor";
 import Vertex from "./graph/Vertex";
 import Button from "./ui/Button";
 
-export default class VertexEditor {
+export default class VertexEditor implements Editor {
   public rootElement: HTMLElement;
   private nameInput: HTMLInputElement;
   private deleteButton: Button;

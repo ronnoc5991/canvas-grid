@@ -1,3 +1,4 @@
+import Editor from "../types/Editor";
 import Graph from "./graph/Graph";
 import Vertex from "./graph/Vertex";
 import Button from "./ui/Button";
@@ -13,7 +14,7 @@ import Button from "./ui/Button";
 // they should be able to select the edge, then the vertex, then update that vertex
 // that would mean that we should find the selected edge in the graph, and update it
 
-export default class EdgeEditor {
+export default class EdgeEditor implements Editor {
   public rootElement: HTMLElement;
   private vertexOneInput: HTMLInputElement;
   private vertexTwoInput: HTMLInputElement;
@@ -58,17 +59,13 @@ export default class EdgeEditor {
       this.vertexTwoInput.value = selectedVertex.name;
     }
 
-    if (this.shouldCreateEdge()) {
+    if (!!this.vertexOne && !!this.vertexTwo) {
       this.graph.createEdge(this.vertexOne, this.vertexTwo);
     }
   }
 
-  private shouldCreateEdge() {
-    return !!this.vertexOne && !!this.vertexTwo;
-  }
-
   public dispose() {
-    // remove all event listeners involved here
+    // TODO: remove all event listeners involved here
     this.saveButton.dispose();
   }
 }

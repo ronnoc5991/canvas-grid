@@ -1,9 +1,10 @@
-import { Path } from "../types/Path";
+import Editor from "../types/Editor";
 import Graph from "./graph/Graph";
 import Vertex from "./graph/Vertex";
+import { Path } from "../types/Path";
 import getEuclideanDistanceBetweenPoints from "../utils/getEuclideanDistanceBetweenPoints";
 
-export default class PathEditor {
+export default class PathEditor implements Editor {
   public rootElement: HTMLElement;
   private startInput: HTMLInputElement;
   private endInput: HTMLInputElement;
@@ -92,7 +93,11 @@ export default class PathEditor {
       if (currentVertex === this.end) break;
 
       currentVertex.edges.forEach((edge) => {
-        const connectedVertex = edge.toVertex;
+        const connectedVertex = edge.vertices.find(
+          (vertex) => vertex !== currentVertex
+        );
+
+        if (!connectedVertex) return;
 
         if (connectedVertex.distanceToTarget === null && this.end !== null) {
           connectedVertex.distanceToTarget = getEuclideanDistanceBetweenPoints(
@@ -147,5 +152,9 @@ export default class PathEditor {
       vertex.distanceToTarget = null;
       vertex.previousVertexInPath = null;
     });
+  }
+
+  public dispose() {
+    // TODO: remove any event listeners created for this component
   }
 }
