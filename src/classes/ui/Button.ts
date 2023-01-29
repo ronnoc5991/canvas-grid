@@ -2,14 +2,9 @@ export default class Button {
   public rootElement: HTMLButtonElement;
 
   constructor(className: string, private onClick: (event: Event) => void) {
-    this.rootElement = this.initialize(className);
-  }
-
-  private initialize(className: string): HTMLButtonElement {
-    const element = document.createElement("button");
-    element.classList.add(className);
-    element.addEventListener("click", this.onClick);
-    return element;
+    this.rootElement = document.createElement("button");
+    this.rootElement.classList.add(className);
+    this.rootElement.addEventListener("click", this.onClick);
   }
 
   public dispose() {
