@@ -23,15 +23,17 @@ export default class Controls {
   private isMouseDown: boolean = false;
   private isDragging: boolean = false;
   private previousMousePosition: Position = { x: 0, y: 0 };
-  private pathEditor: PathEditor | null = null;
+  private sidePanel: SidePanel;
+  private vertexEditor: VertexEditor | null = null;
   private edgeEditor: EdgeEditor | null = null;
+  private pathEditor: PathEditor | null = null;
 
   constructor(
     private canvas: HTMLCanvasElement,
     private graph: Graph,
-    private mapWindow: MapWindow,
-    private sidePanel: SidePanel
+    private mapWindow: MapWindow
   ) {
+    this.sidePanel = new SidePanel();
     const vertexCreationButton = document.getElementById(
       "vertex-creation-button"
     );
@@ -60,17 +62,13 @@ export default class Controls {
     });
   }
 
-  private closeSidePanel() {
-    this.sidePanel.close();
-  }
-
   private onVertexCreationClick() {
     this.editMode = "vertex-creation";
   }
 
   private onEdgeCreationClick() {
     this.editMode = "edge-creation";
-    this.edgeEditor = new EdgeEditor(this.graph, this.closeSidePanel);
+    this.edgeEditor = new EdgeEditor(this.graph, () => this.sidePanel.close());
     this.sidePanel.updateContent(this.edgeEditor.rootElement, () => {
       this.editMode = "navigation";
       this.edgeEditor = null;
@@ -114,6 +112,7 @@ export default class Controls {
 
     if (this.editMode === "vertex-creation") {
       this.graph.createVertex(clickedPosition);
+      this.editMode = "navigation";
     } else if (this.editMode === "edge-creation" && !!clickedVertex) {
       // TODO: make sure this is correct
       this.edgeEditor?.onVertexSelection(clickedVertex);
