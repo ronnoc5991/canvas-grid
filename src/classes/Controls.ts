@@ -15,16 +15,12 @@ const DRAGGING_THRESHOLD: number = 5;
 // RESPONSIBILITIES:
 // - listen for user input, dispatch events accordingly
 
-// TODO: Need to switch back to navigation mode after exiting other modes...
-// there is no more navigation mode button
-
 export default class Controls {
   private editMode: EditMode = DEFAULT_EDIT_MODE;
   private isMouseDown: boolean = false;
   private isDragging: boolean = false;
   private previousMousePosition: Position = { x: 0, y: 0 };
   private sidePanel: SidePanel;
-  private vertexEditor: VertexEditor | null = null;
   private edgeEditor: EdgeEditor | null = null;
   private pathEditor: PathEditor | null = null;
 
@@ -40,16 +36,22 @@ export default class Controls {
     if (vertexCreationButton)
       vertexCreationButton.addEventListener(
         "click",
-        this.onVertexCreationClick
+        this.onVertexCreationClick.bind(this)
       );
 
     const edgeCreationButton = document.getElementById("edge-creation-button");
     if (edgeCreationButton)
-      edgeCreationButton.addEventListener("click", this.onEdgeCreationClick);
+      edgeCreationButton.addEventListener(
+        "click",
+        this.onEdgeCreationClick.bind(this)
+      );
 
     const pathPlanningButton = document.getElementById("path-planning-button");
     if (pathPlanningButton)
-      pathPlanningButton.addEventListener("click", this.onPathPlanningClick);
+      pathPlanningButton.addEventListener(
+        "click",
+        this.onPathPlanningClick.bind(this)
+      );
 
     canvas.addEventListener("mousedown", (event) => {
       this.onMouseDown(event);
@@ -66,13 +68,18 @@ export default class Controls {
     this.editMode = "vertex-creation";
   }
 
+  private closeSidePanel() {
+    this.sidePanel.close();
+  }
+
   private onEdgeCreationClick() {
     this.editMode = "edge-creation";
-    this.edgeEditor = new EdgeEditor(this.graph, () => this.sidePanel.close());
+    this.edgeEditor = new EdgeEditor(this.graph, this.closeSidePanel);
+
     this.sidePanel.updateContent(this.edgeEditor.rootElement, () => {
       this.editMode = "navigation";
+      this.edgeEditor?.dispose();
       this.edgeEditor = null;
-      // remove all event listeners in the edgeEditor
     });
   }
 
@@ -80,8 +87,9 @@ export default class Controls {
     this.editMode = "path-planning";
     this.pathEditor = new PathEditor(this.graph);
     this.sidePanel.updateContent(this.pathEditor.rootElement, () => {
+      this.editMode = "navigation";
+      this.pathEditor?.dispose();
       this.pathEditor = null;
-      // need to remove event listenders from pathEditor things?
     });
   }
 
@@ -139,15 +147,15 @@ export default class Controls {
       selectedVertex,
       () => {
         this.graph.removeVertex(selectedVertex);
-        this.sidePanel.close();
+        this.closeSidePanel();
       },
       () => {
         this.editMode = "path-planning";
         this.pathEditor = new PathEditor(this.graph);
         this.pathEditor.onVertexSelection(selectedVertex);
         this.sidePanel.updateContent(this.pathEditor.rootElement, () => {
+          this.pathEditor?.dispose();
           this.pathEditor = null;
-          // need to remove event listeners from path planner things
         });
       }
     );

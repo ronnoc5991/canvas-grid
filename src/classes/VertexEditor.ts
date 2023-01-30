@@ -1,4 +1,5 @@
 import Editor from "../types/Editor";
+import { Position } from "../types/Position";
 import Vertex from "./graph/Vertex";
 import Button from "./ui/Button";
 
@@ -34,11 +35,11 @@ export default class VertexEditor implements Editor {
     return input;
   }
 
-  private updateName() {
+  private updateName(): void {
     this.vertex.name = this.nameInput.value;
   }
 
-  public dispose() {
+  public dispose(): void {
     this.deleteButton.dispose();
     this.planAPathButton.dispose();
     this.nameInput.removeEventListener("keyup", this.updateName);
