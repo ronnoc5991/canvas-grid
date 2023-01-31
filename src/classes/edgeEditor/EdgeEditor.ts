@@ -1,7 +1,7 @@
-import Editor from "../types/Editor";
-import Graph from "./graph/Graph";
-import Vertex from "./graph/Vertex";
-import Button from "./ui/Button";
+import Editor from "../../types/Editor";
+import Graph from "../graph/Graph";
+import Vertex from "../graph/Vertex";
+import Button from "../ui/Button";
 
 // use cases:
 // person has created a few vertices and now wants to create some edges

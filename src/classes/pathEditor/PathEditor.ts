@@ -1,8 +1,8 @@
-import Editor from "../types/Editor";
-import Graph from "./graph/Graph";
-import Vertex from "./graph/Vertex";
-import { Path } from "../types/Path";
-import getEuclideanDistanceBetweenPoints from "../utils/getEuclideanDistanceBetweenPoints";
+import Editor from "../../types/Editor";
+import Graph from "../graph/Graph";
+import Vertex from "../graph/Vertex";
+import { Path } from "../../types/Path";
+import getEuclideanDistanceBetweenPoints from "../../utils/getEuclideanDistanceBetweenPoints";
 
 export default class PathEditor implements Editor {
   public rootElement: HTMLElement;

@@ -3,9 +3,9 @@ import Graph from "./graph/Graph";
 import MapWindow from "./MapWindow";
 import Vertex from "./graph/Vertex";
 import SidePanel from "./sidePanel/SidePanel";
-import PathEditor from "./PathEditor";
-import VertexEditor from "./VertexEditor";
-import EdgeEditor from "./EdgeEditor";
+import PathEditor from "./pathEditor/PathEditor";
+import VertexEditor from "./vertexEditor/VertexEditor";
+import EdgeEditor from "./edgeEditor/EdgeEditor";
 import { EditMode } from "../types/EditMode";
 import viewportConfig from "./viewport/config";
 

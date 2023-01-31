@@ -1,7 +1,7 @@
-import Editor from "../types/Editor";
-import { Position } from "../types/Position";
-import Vertex from "./graph/Vertex";
-import Button from "./ui/Button";
+import Editor from "../../types/Editor";
+import { Position } from "../../types/Position";
+import Vertex from "../graph/Vertex";
+import Button from "../ui/Button";
 
 export default class VertexEditor implements Editor {
   public rootElement: HTMLElement;
