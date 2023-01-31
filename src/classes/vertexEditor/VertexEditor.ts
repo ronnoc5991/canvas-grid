@@ -1,5 +1,4 @@
 import Editor from "../../types/Editor";
-import { Position } from "../../types/Position";
 import Vertex from "../graph/Vertex";
 import Button from "../ui/Button";
 
@@ -16,7 +15,7 @@ export default class VertexEditor implements Editor {
   ) {
     this.rootElement = document.createElement("div");
     this.nameInput = this.createNameInput();
-    this.nameInput.addEventListener("keyup", this.updateName);
+    this.nameInput.addEventListener("keyup", this.updateName.bind(this));
     this.deleteButton = new Button(
       "delete-active-vertex",
       this.onDelete.bind(this)
