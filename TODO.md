@@ -1,4 +1,4 @@
-TODO: finish edge/vertex/path editors
+TODO: finish edge/vertex/path editors!!
 TODO: Create ability to 'select' an edge and delete it
 TODO: Support custom edge colors
 TODO: in node creation, create a mouse follower that is the node, snap it to the grid?
