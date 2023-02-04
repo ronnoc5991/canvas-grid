@@ -2,6 +2,8 @@
 // - store the current window to the map
 // - update subscribers on changes
 
+const ZOOM_OUT_BUTTON_ID: string = "zoom-out-button";
+const ZOOM_IN_BUTTON_ID: string = "zoom-in-button";
 const DEFAULT_ZOOM_PERCENTAGE: number = 100;
 const MAX_ZOOM_PERCENTAGE: number = 300;
 const MIN_ZOOM_PERCENTAGE: number = 25;
@@ -11,10 +13,10 @@ type Subscriber = (mapWindow: MapWindow) => void;
 
 export default class MapWindow {
   private zoomOutButton = document.getElementById(
-    "zoom-out-button"
+    ZOOM_OUT_BUTTON_ID
   ) as HTMLButtonElement;
   private zoomInButton = document.getElementById(
-    "zoom-in-button"
+    ZOOM_IN_BUTTON_ID
   ) as HTMLButtonElement;
   private subscribers: Array<Subscriber> = [];
   private zoomPercentage: number = DEFAULT_ZOOM_PERCENTAGE;
@@ -73,22 +75,9 @@ export default class MapWindow {
   }
 
   public onDrag(deltaX: number, deltaY: number) {
-    // const { scaledDeltaX, scaledDeltaY } = this.scaleDrag(deltaX, deltaY);
     const scaledDeltaX = this.getScaledValue(deltaX);
     const scaledDeltaY = this.getScaledValue(deltaY);
     this.update(-scaledDeltaX, -scaledDeltaX, -scaledDeltaY, -scaledDeltaY);
-  }
-
-  // COULD THIS FUNCTION LIVE IN A TRANSLATOR CLASS?
-  // IT COULD KNOW ABOUT THE MAPWINDOW AND THE VIEWPORT? AND TRANSLATE THINGS BACK AND FORTH
-  private scaleDrag(
-    deltaX: number,
-    deltaY: number
-  ): { scaledDeltaX: number; scaledDeltaY: number } {
-    const zoomDivisor = this.zoomPercentage / DEFAULT_ZOOM_PERCENTAGE;
-    const scaledDeltaX = deltaX / zoomDivisor;
-    const scaledDeltaY = deltaY / zoomDivisor;
-    return { scaledDeltaX, scaledDeltaY };
   }
 
   public onScroll(event: WheelEvent) {
