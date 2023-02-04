@@ -1,11 +1,10 @@
 {
   "compilerOptions": {
     "outDir": "./dist/",
-    "noImplicitAny": true,
     "module": "es6",
     "target": "es5",
+    "noImplicitAny": true,
     "strict": true,
-    "allowJs": true,
     "lib": ["es2019", "dom"],
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,

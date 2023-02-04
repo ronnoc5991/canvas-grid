@@ -8,18 +8,16 @@ import VertexEditor from "./vertexEditor/VertexEditor";
 import EdgeEditor from "./edgeEditor/EdgeEditor";
 import { EditMode } from "../types/EditMode";
 import viewportConfig from "./viewport/config";
+import Mouse from "./Mouse";
 
 const DEFAULT_EDIT_MODE: EditMode = "navigation";
-const DRAGGING_THRESHOLD: number = 5;
 
 // RESPONSIBILITIES:
 // - listen for user input, dispatch events accordingly
 
 export default class Controls {
   private editMode: EditMode = DEFAULT_EDIT_MODE;
-  private isMouseDown: boolean = false;
-  private isDragging: boolean = false;
-  private previousMousePosition: Position = { x: 0, y: 0 };
+  private mouse: Mouse;
   private sidePanel: SidePanel;
   private edgeEditor: EdgeEditor | null = null;
   private pathEditor: PathEditor | null = null;
@@ -30,6 +28,11 @@ export default class Controls {
     private mapWindow: MapWindow
   ) {
     this.sidePanel = new SidePanel();
+    this.mouse = new Mouse(
+      canvas,
+      this.onDrag.bind(this),
+      this.onMouseUp.bind(this)
+    );
     const vertexCreationButton = document.getElementById(
       "vertex-creation-button"
     );
@@ -52,24 +55,10 @@ export default class Controls {
         "click",
         this.onPathPlanningClick.bind(this)
       );
-
-    canvas.addEventListener("mousedown", (event) => {
-      this.onMouseDown(event);
-    });
-    canvas.addEventListener("mouseup", (event) => {
-      this.onMouseUp(event);
-    });
-    canvas.addEventListener("mousemove", (event) => {
-      this.onMouseMove(event);
-    });
   }
 
   private onVertexCreationClick() {
     this.editMode = "vertex-creation";
-  }
-
-  private closeSidePanel() {
-    this.sidePanel.close();
   }
 
   private onEdgeCreationClick() {
@@ -93,24 +82,11 @@ export default class Controls {
     });
   }
 
-  private onMouseDown(event: MouseEvent) {
-    this.isMouseDown = true;
-    this.setPreviousMousePosition(event.clientX, event.clientY);
+  private closeSidePanel() {
+    this.sidePanel.close();
   }
 
-  private onMouseMove(event: MouseEvent) {
-    if (!this.isMouseDown) return;
-    if (this.isDragging) {
-      this.onDrag(event);
-      return;
-    }
-    if (this.hasStartedDragging(event)) {
-      this.setPreviousMousePosition(event.clientX, event.clientY);
-      this.isDragging = true;
-    }
-  }
-
-  private onMouseUp({ clientX, clientY }: MouseEvent) {
+  private onMouseUp({ clientX, clientY }: MouseEvent, isDragging: boolean) {
     const { x, y } = this.canvas.getBoundingClientRect();
     const clickedPosition: Position = {
       x: this.getMapWindowXFromViewportX(clientX - x),
@@ -126,20 +102,17 @@ export default class Controls {
       this.edgeEditor?.onVertexSelection(clickedVertex);
     } else if (
       this.editMode === "navigation" &&
-      !this.isDragging &&
+      !isDragging &&
       !!clickedVertex
     ) {
       this.displaySelectedVertex(clickedVertex);
     } else if (
       this.editMode === "path-planning" &&
-      !this.isDragging &&
+      !isDragging &&
       !!clickedVertex
     ) {
       this.pathEditor?.onVertexSelection(clickedVertex);
     }
-
-    this.isMouseDown = false;
-    this.isDragging = false;
   }
 
   private displaySelectedVertex(selectedVertex: Vertex) {
@@ -165,18 +138,7 @@ export default class Controls {
     });
   }
 
-  private hasStartedDragging({ clientX, clientY }: MouseEvent): boolean {
-    return (
-      Math.abs(clientX - this.previousMousePosition.x) > DRAGGING_THRESHOLD ||
-      Math.abs(clientY - this.previousMousePosition.y) > DRAGGING_THRESHOLD
-    );
-  }
-
-  private onDrag({ clientX, clientY }: MouseEvent) {
-    const deltaX = clientX - this.previousMousePosition.x;
-    const deltaY = clientY - this.previousMousePosition.y;
-
-    this.setPreviousMousePosition(clientX, clientY);
+  private onDrag(deltaX: number, deltaY: number): void {
     this.mapWindow.onDrag(deltaX, deltaY);
   }
 
@@ -208,10 +170,5 @@ export default class Controls {
       (this.mapWindow.maxY - this.mapWindow.minY) *
         (yValue / this.canvas.height)
     );
-  }
-
-  private setPreviousMousePosition(x: number, y: number) {
-    this.previousMousePosition.x = x;
-    this.previousMousePosition.y = y;
   }
 }
