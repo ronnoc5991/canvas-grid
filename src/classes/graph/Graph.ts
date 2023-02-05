@@ -35,12 +35,13 @@ export default class Graph {
     return newVertex;
   }
 
-  public createEdge(vertexOne: Vertex, vertexTwo: Vertex) {
+  public createEdge(vertexOne: Vertex, vertexTwo: Vertex): Edge {
     const edge = new Edge([vertexOne, vertexTwo]);
     vertexOne.addEdge(edge);
     vertexTwo.addEdge(edge);
     this.edges.push(edge);
     this.publish();
+    return edge;
   }
 
   public removeVertex(vertexToDelete: Vertex) {

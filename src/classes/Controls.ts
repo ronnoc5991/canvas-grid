@@ -9,6 +9,7 @@ import EdgeEditor from "./edgeEditor/EdgeEditor";
 import { EditMode } from "../types/EditMode";
 import viewportConfig from "./viewport/config";
 import Mouse from "./Mouse";
+import Editor from "../types/Editor";
 
 const DEFAULT_EDIT_MODE: EditMode = "navigation";
 
@@ -16,11 +17,10 @@ const DEFAULT_EDIT_MODE: EditMode = "navigation";
 // - listen for user input, dispatch events accordingly
 
 export default class Controls {
-  private editMode: EditMode = DEFAULT_EDIT_MODE;
   private mouse: Mouse;
+  private editMode: EditMode = DEFAULT_EDIT_MODE;
   private sidePanel: SidePanel;
-  private edgeEditor: EdgeEditor | null = null;
-  private pathEditor: PathEditor | null = null;
+  private activeEditor: Editor | null = null;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -63,79 +63,76 @@ export default class Controls {
 
   private onEdgeCreationClick() {
     this.editMode = "edge-creation";
-    this.edgeEditor = new EdgeEditor(this.graph, this.closeSidePanel);
-
-    this.sidePanel.updateContent(this.edgeEditor.rootElement, () => {
-      this.editMode = "navigation";
-      this.edgeEditor?.dispose();
-      this.edgeEditor = null;
-    });
+    this.updateActiveEditor(
+      new EdgeEditor(this.graph, this.closeSidePanel.bind(this))
+    );
   }
 
   private onPathPlanningClick() {
     this.editMode = "path-planning";
-    this.pathEditor = new PathEditor(this.graph);
-    this.sidePanel.updateContent(this.pathEditor.rootElement, () => {
+    this.updateActiveEditor(new PathEditor(this.graph));
+  }
+
+  private updateActiveEditor(newEditor: Editor) {
+    this.activeEditor?.dispose();
+    this.activeEditor = newEditor;
+
+    this.sidePanel.updateContent(this.activeEditor.rootElement, () => {
       this.editMode = "navigation";
-      this.pathEditor?.dispose();
-      this.pathEditor = null;
+      this.activeEditor?.dispose();
+      this.activeEditor = null;
     });
   }
 
-  private closeSidePanel() {
-    this.sidePanel.close();
-  }
-
-  private onMouseUp({ clientX, clientY }: MouseEvent, isDragging: boolean) {
+  private onMouseUp({ clientX, clientY }: MouseEvent) {
     const { x, y } = this.canvas.getBoundingClientRect();
     const clickedPosition: Position = {
       x: this.getMapWindowXFromViewportX(clientX - x),
       y: this.getMapWindowYFromViewportY(clientY - y),
     };
-    const clickedVertex = this.getClickedVertex(clickedPosition);
 
     if (this.editMode === "vertex-creation") {
       this.graph.createVertex(clickedPosition);
-      this.editMode = "navigation";
-    } else if (this.editMode === "edge-creation" && !!clickedVertex) {
-      // TODO: make sure this is correct
-      this.edgeEditor?.onVertexSelection(clickedVertex);
-    } else if (
-      this.editMode === "navigation" &&
-      !isDragging &&
-      !!clickedVertex
-    ) {
+      // this.editMode = "navigation"; // TODO: do for all modes?
+      return;
+    }
+
+    const clickedVertex = this.getClickedVertex(clickedPosition);
+
+    if (!clickedVertex) return;
+
+    if (this.editMode === "navigation") {
       this.displaySelectedVertex(clickedVertex);
-    } else if (
-      this.editMode === "path-planning" &&
-      !isDragging &&
-      !!clickedVertex
+      return;
+    }
+
+    if (
+      this.editMode === "edge-creation" ||
+      this.editMode === "path-planning"
     ) {
-      this.pathEditor?.onVertexSelection(clickedVertex);
+      this.activeEditor?.onVertexSelection(clickedVertex);
     }
   }
 
   private displaySelectedVertex(selectedVertex: Vertex) {
-    const vertexEditor = new VertexEditor(
-      selectedVertex,
-      () => {
-        this.graph.removeVertex(selectedVertex);
-        this.closeSidePanel();
-      },
-      () => {
-        this.editMode = "path-planning";
-        this.pathEditor = new PathEditor(this.graph);
-        this.pathEditor.onVertexSelection(selectedVertex);
-        this.sidePanel.updateContent(this.pathEditor.rootElement, () => {
-          this.pathEditor?.dispose();
-          this.pathEditor = null;
-        });
-      }
+    this.updateActiveEditor(
+      new VertexEditor(
+        selectedVertex,
+        () => {
+          this.graph.removeVertex(selectedVertex);
+          this.closeSidePanel();
+        },
+        () => {
+          this.editMode = "path-planning";
+          this.updateActiveEditor(new PathEditor(this.graph));
+          this.activeEditor?.onVertexSelection(selectedVertex);
+        }
+      )
     );
+  }
 
-    this.sidePanel.updateContent(vertexEditor.rootElement, () => {
-      vertexEditor.dispose();
-    });
+  private closeSidePanel() {
+    this.sidePanel.close();
   }
 
   private onDrag(deltaX: number, deltaY: number): void {

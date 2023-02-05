@@ -1,7 +1,7 @@
 import { Position } from "../types/Position";
 
 type OnDrag = (deltaX: number, deltaY: number) => void;
-type OnUp = (event: MouseEvent, isDragging: boolean) => void;
+type OnUp = (event: MouseEvent) => void;
 
 const DRAGGING_THRESHOLD: number = 5;
 
@@ -28,7 +28,7 @@ export default class Mouse {
       this.onDown(event);
     });
     canvas.addEventListener("mouseup", (event) => {
-      this.onUp(event, this.isDragging);
+      if (!this.isDragging) this.onUp(event);
       this.isDown = false;
       this.isDragging = false;
     });

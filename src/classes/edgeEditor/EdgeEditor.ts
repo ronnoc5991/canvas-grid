@@ -1,18 +1,15 @@
 import Editor from "../../types/Editor";
+import Edge from "../graph/Edge";
 import Graph from "../graph/Graph";
 import Vertex from "../graph/Vertex";
 import Button from "../ui/Button";
 
-// use cases:
-// person has created a few vertices and now wants to create some edges
-// they click the create an edge button
-// the side panel slides out, exposing this component
-// user selects two vertices, then we create an edge?
-// then the user can manipulate the edge's curves, then click save
+// user should be able to:
+// select an edge, then a vertex input, then select a new vertex?
 
-// what if the user clicks the wrong vertex initially?
-// they should be able to select the edge, then the vertex, then update that vertex
-// that would mean that we should find the selected edge in the graph, and update it
+// TODO: handle the bezier point movement here?
+
+// TODO: Create input class to use in these editors
 
 export default class EdgeEditor implements Editor {
   public rootElement: HTMLElement;
@@ -20,6 +17,7 @@ export default class EdgeEditor implements Editor {
   private vertexTwoInput: HTMLInputElement;
   private vertexOne: Vertex | null = null;
   private vertexTwo: Vertex | null = null;
+  private edge: Edge | null = null;
   private saveButton: Button;
 
   constructor(private graph: Graph, private onSave: () => void) {
@@ -30,18 +28,18 @@ export default class EdgeEditor implements Editor {
     this.rootElement.appendChild(this.vertexOneInput);
     this.rootElement.appendChild(this.vertexTwoInput);
 
-    // edge editor needs a way to close the side panel that it is in?
-    // an onSave function?
-    this.saveButton = new Button("save-button", () => {
-      // there is no edge involved here yet :)
-      // ths should also toggle isBeingEdited to false for the current edge
-      this.dispose();
-      this.onSave();
-    });
-  }
+    this.saveButton = new Button(
+      "save-button",
+      () => {
+        if (this.edge) this.edge.isBeingEdited = false;
+        this.onSave();
+        this.dispose();
+      },
+      "Save"
+    );
 
-  // receieve clicks from controls and interpret them here
-  // can also handle all of the bezier point movement here?
+    this.rootElement.appendChild(this.saveButton.rootElement);
+  }
 
   private createInput(name: string): HTMLInputElement {
     const input = document.createElement("input");
@@ -59,13 +57,12 @@ export default class EdgeEditor implements Editor {
       this.vertexTwoInput.value = selectedVertex.name;
     }
 
-    if (!!this.vertexOne && !!this.vertexTwo) {
-      this.graph.createEdge(this.vertexOne, this.vertexTwo);
+    if (!!this.vertexOne && !!this.vertexTwo && !this.edge) {
+      this.edge = this.graph.createEdge(this.vertexOne, this.vertexTwo);
     }
   }
 
   public dispose() {
-    // TODO: remove all event listeners involved here
     this.saveButton.dispose();
   }
 }

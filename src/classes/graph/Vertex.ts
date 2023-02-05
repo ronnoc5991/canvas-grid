@@ -14,7 +14,7 @@ export default class Vertex {
     this.previousVertexInPath = null;
   }
 
-  public addEdge(edge: Edge) {
+  public addEdge(edge: Edge): void {
     this.edges.push(edge);
   }
 }

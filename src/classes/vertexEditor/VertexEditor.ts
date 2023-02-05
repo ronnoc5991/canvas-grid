@@ -18,12 +18,21 @@ export default class VertexEditor implements Editor {
     this.nameInput.addEventListener("keyup", this.updateName.bind(this));
     this.deleteButton = new Button(
       "delete-active-vertex",
-      this.onDelete.bind(this)
+      this.onDelete.bind(this),
+      "Delete"
     );
-    this.planAPathButton = new Button("plan-a-path-button", this.onPlanAPath);
+    this.planAPathButton = new Button(
+      "plan-a-path-button",
+      this.onPlanAPath,
+      "Plan a Path"
+    );
     this.rootElement.appendChild(this.nameInput);
     this.rootElement.appendChild(this.deleteButton.rootElement);
     this.rootElement.appendChild(this.planAPathButton.rootElement);
+  }
+
+  public onVertexSelection(selectedVertex: Vertex) {
+    // do something with this vertex?
   }
 
   private createNameInput(): HTMLInputElement {
