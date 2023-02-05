@@ -19,8 +19,6 @@ export default class Viewport {
     private mapWindow: MapWindow
   ) {
     this.context = canvas.getContext("2d") as CanvasRenderingContext2D;
-    this.mapWindow.subscribe(this.update.bind(this));
-    this.graph.subscribe(this.update.bind(this));
   }
 
   public update() {
@@ -28,6 +26,7 @@ export default class Viewport {
     this.drawGrid();
     this.drawEdges();
     this.drawVertices();
+    requestAnimationFrame(() => this.update());
   }
 
   private drawGrid() {

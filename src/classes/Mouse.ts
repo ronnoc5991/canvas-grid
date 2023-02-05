@@ -6,7 +6,6 @@ type OnUp = (event: MouseEvent) => void;
 const DRAGGING_THRESHOLD: number = 5;
 
 // could update it on every mouseMove?
-// could also subscribe to edit mode changes so I know when to update my follower type?
 
 // create a mouse follower for each mode
 // dont tell the mouse about the mode

@@ -1,6 +1,5 @@
 // RESPONSIBILITIES:
 // - store the current window to the map
-// - update subscribers on changes
 
 const ZOOM_OUT_BUTTON_ID: string = "zoom-out-button";
 const ZOOM_IN_BUTTON_ID: string = "zoom-in-button";
@@ -9,8 +8,6 @@ const MAX_ZOOM_PERCENTAGE: number = 300;
 const MIN_ZOOM_PERCENTAGE: number = 25;
 const ZOOM_STEP_SIZE: number = 10;
 
-type Subscriber = (mapWindow: MapWindow) => void;
-
 export default class MapWindow {
   private zoomOutButton = document.getElementById(
     ZOOM_OUT_BUTTON_ID
@@ -18,7 +15,6 @@ export default class MapWindow {
   private zoomInButton = document.getElementById(
     ZOOM_IN_BUTTON_ID
   ) as HTMLButtonElement;
-  private subscribers: Array<Subscriber> = [];
   private zoomPercentage: number = DEFAULT_ZOOM_PERCENTAGE;
   public minX: number;
   public maxX: number;
@@ -42,16 +38,6 @@ export default class MapWindow {
     this.maxY = this.canvas.height;
   }
 
-  public subscribe(subscriber: Subscriber) {
-    this.subscribers.push(subscriber);
-  }
-
-  private publish() {
-    this.subscribers.forEach((subscriber) => {
-      subscriber(this);
-    });
-  }
-
   private update(
     minXDelta: number,
     maxXDelta: number,
@@ -62,7 +48,6 @@ export default class MapWindow {
     this.maxX += maxXDelta;
     this.minY += minYDelta;
     this.maxY += maxYDelta;
-    this.publish();
   }
 
   public onResize() {
