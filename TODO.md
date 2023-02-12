@@ -1,4 +1,4 @@
-TODO: finish edge/vertex/path editors
+TODO: finish edge/vertex/path editor
 TODO: Create mouse follower? This will be visual cue as to what the edit mode is?
 TODO: Create ability to 'select' an edge and delete it
 TODO: Support custom edge colors
