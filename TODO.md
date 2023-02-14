@@ -1,4 +1,4 @@
-TODO: finish edge/vertex/path editors
+TODO: finish edge/vertex/path editor
 TODO: Create mouse follower? This will be visual cue as to what the edit mode is?
 TODO: Create ability to 'select' an edge and delete it
 TODO: Support custom edge colors
@@ -11,4 +11,4 @@ TODO: Should only be two edit buttons: Vertex and Edge Creation... should go bac
 TODO: Create real maps of existing city metro systems and include them in the app?
 TODO: Create a mouseFollower that displays the coordinates?
 TODO: draw fewer grid lines when we are zoomed out?
-TODO: allow for toggling on/off the grid lines?
+TODO: allow for toggling on/off the grid lines
