@@ -19,6 +19,7 @@ export default class Viewport {
     private mapWindow: MapWindow
   ) {
     this.context = canvas.getContext("2d") as CanvasRenderingContext2D;
+    this.update();
   }
 
   public update() {
